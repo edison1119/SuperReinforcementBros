@@ -1,5 +1,4 @@
 # import statement
-
 import time
 import pygame
 from pygame.locals import *
@@ -11,78 +10,100 @@ screen = pygame.display.set_mode((1000, 600))
 pygame.display.set_caption('platformer')
 # picture import
 bluepic = pygame.image.load('blue.png')
-blue = pygame.transform.scale(bluepic, (38, 38))
+r=38
+blue = pygame.transform.scale(bluepic, (r, r))
 
 framerate=30
 # classes
 class Player(pygame.sprite.Sprite):
-    # 初次召喚角色時必定執行的部分
+
     def __init__(self):
-        # 召喚角色時一起設定好sprite的屬性
         pygame.sprite.Sprite.__init__(self)
-        # 屬性image
+        #image
         self.image = blue
-        # 屬性rect 最最最重要就這個啦~~~~~
+
+        #initial value & rect
         self.rect = self.image.get_rect()
         self.rect.x = 50
         self.rect.y = 150
         self.xvel = 0
         self.yvel = 0
-        self.g = 38*67.82/ framerate**2
-        self.jumph = 38*17.36/framerate
+        self.run = False
+        self.g = r*67.82/ framerate**2
+        self.jumph = r*17.36/framerate
+
+
+        #movement state
         self.right = False
         self.left = False
-        self.wasright = False
-        self.wasleft = False
+        self.run= False
         self.jump = False
         self.ground = False
         self.onplatform = False
         self.jumphold = False
+        self.jumptimer=0
+
         if self.rect.x > 1000:
             self.rect.x = -20
 
+    def nextframe(self,c):
+        """
+        0: No movement
+        1: jump
+        2: squat / pipe
+        3: left
+        4: right
+        5: right + jump
+        6: right + sprint (fireball)
+        7: 5 + 6
+        """
+
     def pressbutton(self, event):
+        if event.key == KMOD_CTRL:
+            self.run = True
         if event.key == K_RIGHT or event.key == K_d:
             self.right = True
+
         if event.key == K_LEFT or event.key == K_a:
             self.left = True
+
         if event.key == K_w or event.key == K_UP:
             if self.jump == False:
                 self.jump = True
-                self.yvel = -self.jumph
                 self.jumphold = True
 
     def unpressbutton(self):
         if event.key == K_RIGHT or event.key == K_d:
             self.right = False
+            self.run = False
         if event.key == K_LEFT or event.key == K_a:
             self.left = False
+            self.run=False
         if event.key == K_w or event.key == K_UP:
             self.jumphold = False
 
     def update(self):
-        # speed up
-        if self.right == True:
-            if self.xvel < 10:
-                if self.xvel < 0:
-                    self.xvel = self.xvel + 1.2
-                else:
-                    self.xvel = self.xvel + 0.6
-        if self.left == True:
-            if self.xvel > -10:
-                if self.xvel > 0:
-                    self.xvel = self.xvel - 1.2
-                else:
-                    self.xvel = self.xvel - 0.6
-        # xvel process
-        if -0.3 < self.xvel < 0.3:
-            self.xvel = 0
-        elif self.xvel > 0.3:
-            self.xvel = self.xvel - 0.3
-        elif self.xvel < -0.3:
-            self.xvel = self.xvel + 0.3
-        self.rect.x = self.rect.x + self.xvel
+        # movement
+        if self.ground == True:
+            self.g= r*55.88/ framerate**2
+        self.jumptimer +=1
+        if self.jumptimer =5:
+            if self.jumphold = True:
 
+        if self.right == True:
+            if self.run == True:
+                self.xvel=9.1*38
+            else:
+                self.xvel=3.7*38
+        elif self.left == True:
+            if self.run == True:
+                self.xvel=-9.1*38
+            else:
+                self.xvel=-3.7*38
+        else:
+            self.xvel = 0
+        # xvel process
+        self.rect.x = self.rect.x + self.xvel
         # yvel process
         self.rect.y = self.rect.y + self.yvel
         if self.ground == False:

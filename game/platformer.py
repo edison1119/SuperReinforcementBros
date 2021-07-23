@@ -10,7 +10,7 @@ pygame.init()
 screen = pygame.display.set_mode((1000, 600))
 pygame.display.set_caption('platformer')
 # picture import
-bluepic = pygame.image.load('blue.png')
+bluepic = pygame.image.load('Blue.bmp')
 r=38
 blue = pygame.transform.scale(bluepic, (r, r))
 

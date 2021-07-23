@@ -1,4 +1,5 @@
 # import statement
+
 import time
 import pygame
 from pygame.locals import *
@@ -71,7 +72,7 @@ class Player(pygame.sprite.Sprite):
             if self.jump == False:
                 self.jump = True
                 self.jumphold = True
-
+                self.jumptimer=0
     def unpressbutton(self):
         if event.key == K_RIGHT or event.key == K_d:
             self.right = False
@@ -84,22 +85,27 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         # movement
+        print(self.jump,self.yvel)
         if self.ground == True:
             self.g= r*55.88/ framerate**2
         self.jumptimer +=1
-        if self.jumptimer =5:
-            if self.jumphold = True:
-
+        if self.jumptimer ==5 and self.jump:
+            if self.jumphold == True:
+                self.yvel = r * -15.21/framerate
+                self.g=r*34.79/ framerate**2
+            else:
+                self.yvel = r * -17.36/framerate
+                self.g = r * 67.82 / framerate ** 2
         if self.right == True:
             if self.run == True:
-                self.xvel=9.1*38
+                self.xvel=9.1*38/framerate
             else:
-                self.xvel=3.7*38
+                self.xvel=3.7*38/framerate
         elif self.left == True:
             if self.run == True:
-                self.xvel=-9.1*38
+                self.xvel=-9.1*38/framerate
             else:
-                self.xvel=-3.7*38
+                self.xvel=-3.7*38/framerate
         else:
             self.xvel = 0
         # xvel process
@@ -115,8 +121,10 @@ class Player(pygame.sprite.Sprite):
         if self.rect.y > 500 or self.onplatform == True:
             self.rect.y = 500
             self.ground = True
-            self.yvel = 0
-            self.jump = False
+            if self.jumptimer >5:
+                self.yvel = 0
+
+                self.jump = False
         elif self.rect.y < 500 and self.onplatform == False:
             self.ground = False
 

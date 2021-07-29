@@ -10,7 +10,7 @@ pygame.init()
 screen = pygame.display.set_mode((1000, 600))
 pygame.display.set_caption('platformer')
 # picture import
-bluepic = pygame.image.load('Blue.bmp')
+bluepic = pygame.image.load('blue.png')
 r=38
 blue = pygame.transform.scale(bluepic, (r, r))
 
@@ -60,7 +60,7 @@ class Player(pygame.sprite.Sprite):
         """
 
     def pressbutton(self, event):
-        if event.key == KMOD_CTRL:
+        if event.key == K_e:
             self.run = True
         if event.key == K_RIGHT or event.key == K_d:
             self.right = True
@@ -85,14 +85,14 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         # movement
-        print(self.jump,self.yvel)
+        print(self.run,self.xvel)
         if self.ground == True:
             self.g= r*55.88/ framerate**2
         self.jumptimer +=1
         if self.jumptimer ==5 and self.jump:
             if self.jumphold == True:
                 self.yvel = r * -15.21/framerate
-                self.g=r*34.79/ framerate**2
+                self.g=r*34.79/framerate**2
             else:
                 self.yvel = r * -17.36/framerate
                 self.g = r * 67.82 / framerate ** 2
@@ -135,8 +135,20 @@ class Player(pygame.sprite.Sprite):
 
         screen.blit(self.image, (self.rect.x, self.rect.y))
         pygame.display.flip()
+class Object(pygame.sprite.Sprite):
 
+    def __init__(self,x,y,image):
+        pygame.sprite.Sprite.__init__(self)
+        #image
+        self.image=image
 
+        #initial value & rect
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+    def update(self):
+        screen.blit(self.image,(self.rect.x,self.rect.y))
+        pygame.display.flip()
 player = Player()
 run = True
 Clock = pygame.time.Clock()

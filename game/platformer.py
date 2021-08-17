@@ -1,3 +1,5 @@
+#  created at 2021 17
+
 # import statement
 
 import time
@@ -10,8 +12,10 @@ pygame.init()
 screen = pygame.display.set_mode((1000, 600))
 pygame.display.set_caption('platformer')
 # picture import
-bluepic = pygame.image.load('blue.png')
+bluepic = pygame.image.load('blue.bmp')
+brickpic = pygame.image.load('brick.jpg')
 r = 38
+brickpic = pygame.transform.scale(brickpic, (r, r))
 blue = pygame.transform.scale(bluepic, (r, r))
 
 framerate = 30
@@ -64,7 +68,7 @@ class Player(pygame.sprite.Sprite):
     def pressbutton(self, event):
         if event.key == K_e and (self.right or self.left):
             self.run = True
-            self.stop=False
+            self.stop = False
         if event.key == K_RIGHT or event.key == K_d:
             self.right = True
             self.stop = False
@@ -89,7 +93,7 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         # movement
-        print(self.run, self.runtimer)
+        print(self.onplatform)
         if not self.right and not self.left:
             self.stop = True
         if self.stop:
@@ -110,14 +114,14 @@ class Player(pygame.sprite.Sprite):
                 self.g = r * 67.82 / framerate ** 2
         if self.right:
             if self.run:
-                self.xvel = 9.1 * 38 / framerate
+                self.xvel = 9.1 * r / framerate
             else:
-                self.xvel = 3.7 * 38 / framerate
+                self.xvel = 3.7 * r / framerate
         elif self.left:
             if self.run:
-                self.xvel = -9.1 * 38 / framerate
+                self.xvel = -9.1 * r / framerate
             else:
-                self.xvel = -3.7 * 38 / framerate
+                self.xvel = -3.7 * r / framerate
         else:
             self.xvel = 0
         # xvel process
@@ -130,12 +134,20 @@ class Player(pygame.sprite.Sprite):
             # if self.yvel >30:
             #    self.yvel = 30
         # grounding detecting
+        for brick in brickgroup:
+            if self.ground == False and self.yvel > 0 and brick.rect.y - int(self.yvel) <= self.rect.y+r and self.rect.y+r<= brick.rect.y + int(self.yvel) and brick.rect.x - r <= self.rect.x and self.rect.x <= brick.rect.x + r :
+                self.rect.y = brick.rect.y-r
+                self.onplatform = True
+                self.ground = True
+                self.yvel = 0
+                if self.jumptimer > 5:
+                    self.jump = False
         if self.rect.y > 500 or self.onplatform == True:
-            self.rect.y = 500
             self.ground = True
+            if self.rect.y > 500:
+                self.rect.y = 500
             if self.jumptimer > 5:
                 self.yvel = 0
-
                 self.jump = False
         elif self.rect.y < 500 and self.onplatform == False:
             self.ground = False
@@ -146,11 +158,9 @@ class Player(pygame.sprite.Sprite):
             self.rect.x = 1020
 
         screen.blit(self.image, (self.rect.x, self.rect.y))
-        pygame.display.flip()
-
+        self.onplatform=False
 
 class Object(pygame.sprite.Sprite):
-
     def __init__(self, x, y, image):
         pygame.sprite.Sprite.__init__(self)
         # image
@@ -166,11 +176,23 @@ class Object(pygame.sprite.Sprite):
         pygame.display.flip()
 
 
+class Brick(Object):
+    def __init__(self, x, y, image):
+        super().__init__(x, y, image)
+
+    def update(self):
+        super(Brick, self).update()
+
+
+brickgroup = pygame.sprite.Group()
+brick = Brick(400, 400, brickpic)
+brickgroup.add(brick)
 player = Player()
 run = True
 Clock = pygame.time.Clock()
 while run:
     Clock.tick(framerate)
+    print(Clock.get_fps())
     for event in pygame.event.get():
         if event.type == KEYDOWN:
             player.pressbutton(event)
@@ -181,4 +203,6 @@ while run:
             pygame.quit()
             exit()
     screen.fill((0, 0, 0))
+    brickgroup.update()
     player.update()
+    pygame.display.update()

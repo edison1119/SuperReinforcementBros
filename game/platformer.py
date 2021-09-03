@@ -13,7 +13,7 @@ screen = pygame.display.set_mode((1000, 600))
 pygame.display.set_caption('platformer')
 # picture import
 bluepic = pygame.image.load('blue.bmp')
-brickpic = pygame.image.load('brick.jpg')
+brickpic = pygame.image.load('brick.bmp')
 r = 38
 brickpic = pygame.transform.scale(brickpic, (r, r))
 blue = pygame.transform.scale(bluepic, (r, r))

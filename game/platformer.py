@@ -35,7 +35,6 @@ class Player(pygame.sprite.Sprite):
         self.rect.y = 150
         self.xvel = 0
         self.yvel = 0
-        self.run = False
         self.g = r * 67.82 / framerate ** 2
         self.jumph = r * 17.36 / framerate
 
@@ -50,8 +49,6 @@ class Player(pygame.sprite.Sprite):
         self.runtimer = 0
         self.stop = True
         self.jumpable = True
-        if self.rect.x > 1000:
-            self.rect.x = -20
 
     def nextframe(self, c):
         """
@@ -66,15 +63,13 @@ class Player(pygame.sprite.Sprite):
         """
 
     def pressbutton(self, event):
+        #TODO replace with functions (port for AI)
         if event.key == K_e and (self.right or self.left):
             self.run = True
-            self.stop = False
         if event.key == K_RIGHT or event.key == K_d:
             self.right = True
-            self.stop = False
         if event.key == K_LEFT or event.key == K_a:
             self.left = True
-            self.stop = False
         if event.key == K_w or event.key == K_UP:
             if not self.jump and self.jumpable:
                 self.jump = True
@@ -95,8 +90,6 @@ class Player(pygame.sprite.Sprite):
         # movement
         print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
         if not self.right and not self.left:
-            self.stop = True
-        if self.stop:
             self.runtimer += 1
         else:
             self.runtimer = 0

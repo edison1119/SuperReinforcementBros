@@ -93,7 +93,7 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         # movement
-        print('onplat:', self.onplatform,'jable:',self.jumpable, 'Jtimer:', self.jumptimer)
+        print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
         if not self.right and not self.left:
             self.stop = True
         if self.stop:
@@ -102,9 +102,10 @@ class Player(pygame.sprite.Sprite):
             self.runtimer = 0
         if self.runtimer >= 5:
             self.run = False
-        if self.onplatform:
-            self.g = r * 55.88 / framerate ** 2
+
         self.jumptimer += 1
+
+        #gravity check
         if self.jumptimer == 5 and self.jump:
             if self.jumphold:
                 self.yvel = r * -15.21 / framerate
@@ -113,6 +114,8 @@ class Player(pygame.sprite.Sprite):
                 self.yvel = r * -17.36 / framerate
                 self.g = r * 67.82 / framerate ** 2
             self.jump = False
+
+        # directional movement, running
         if self.right:
             if self.run:
                 self.xvel = 9.1 * r / framerate
@@ -128,17 +131,19 @@ class Player(pygame.sprite.Sprite):
         # xvel process
         self.rect.x = self.rect.x + self.xvel
         # yvel process
+        print('yvel', self.yvel)
         self.rect.y = self.rect.y + self.yvel
 
+        # ground detecting
         for brick in brickgroup:
-            if self.rect.colliderect(brick):
-                if self.onplatform == False and self.yvel > 0 and abs(
-                        brick.rect.y - self.rect.y - r) <= self.yvel + .01 and abs(brick.rect.x - self.rect.x) <= r:
-                    self.rect.y = brick.rect.y - r - 0.001
-                    self.onplatform = True
-                    self.yvel = 0
-                    self.jumpable= True
-        # grounding detecting
+            relx = brick.rect.x-self.rect.x
+            rely = brick.rect.y-self.rect.y
+            if not self.onplatform and self.yvel > 0 and abs(rely - r) <= self.yvel + .01 and abs(relx) <= r:
+                self.rect.y = brick.rect.y - r - 0.001
+                self.onplatform = True
+                self.yvel = 0
+                self.jumpable = True
+
         # for brick in brickgroup:
         #    if self.onplatform== False and self.ground == False and self.yvel > 0 and abs(brick.rect.y -self.rect.y-r)<=self.yvel and abs(brick.rect.x - self.rect.x)<= r :
         #        self.rect.y = brick.rect.y-r
@@ -152,14 +157,16 @@ class Player(pygame.sprite.Sprite):
             self.jumpable = True
             self.onplatform = True
             self.yvel = 0
-        elif self.rect.y < 500 and self.onplatform == False:
+        elif self.rect.y < 500 and not self.onplatform:
             self.jumpable = False
 
-        if self.onplatform == False:
+        if not self.onplatform:
             self.yvel = self.yvel + self.g
             # if over adding
             # if self.yvel >30:
             #    self.yvel = 30
+        else:
+            self.g = r * 55.88 / framerate ** 2
         if self.rect.x > 1020:
             self.rect.x = -20
         elif self.rect.x < -20:

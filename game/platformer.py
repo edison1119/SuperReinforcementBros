@@ -44,12 +44,12 @@ class Player(pygame.sprite.Sprite):
         self.left = False
         self.run = False
         self.jump = False
-        self.ground = False
         self.onplatform = False
         self.jumphold = False
         self.jumptimer = 0
         self.runtimer = 0
         self.stop = True
+        self.jumpable = True
         if self.rect.x > 1000:
             self.rect.x = -20
 
@@ -76,7 +76,7 @@ class Player(pygame.sprite.Sprite):
             self.left = True
             self.stop = False
         if event.key == K_w or event.key == K_UP:
-            if not self.jump:
+            if not self.jump and self.jumpable:
                 self.jump = True
                 self.jumphold = True
                 self.jumptimer = 0
@@ -93,7 +93,7 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         # movement
-        print(self.onplatform)
+        print('onplat:', self.onplatform,'jable:',self.jumpable, 'Jtimer:', self.jumptimer)
         if not self.right and not self.left:
             self.stop = True
         if self.stop:
@@ -102,7 +102,7 @@ class Player(pygame.sprite.Sprite):
             self.runtimer = 0
         if self.runtimer >= 5:
             self.run = False
-        if self.ground:
+        if self.onplatform:
             self.g = r * 55.88 / framerate ** 2
         self.jumptimer += 1
         if self.jumptimer == 5 and self.jump:
@@ -112,6 +112,7 @@ class Player(pygame.sprite.Sprite):
             else:
                 self.yvel = r * -17.36 / framerate
                 self.g = r * 67.82 / framerate ** 2
+            self.jump = False
         if self.right:
             if self.run:
                 self.xvel = 9.1 * r / framerate
@@ -128,37 +129,45 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = self.rect.x + self.xvel
         # yvel process
         self.rect.y = self.rect.y + self.yvel
-        if self.ground == False:
+
+        for brick in brickgroup:
+            if self.rect.colliderect(brick):
+                if self.onplatform == False and self.yvel > 0 and abs(
+                        brick.rect.y - self.rect.y - r) <= self.yvel + .01 and abs(brick.rect.x - self.rect.x) <= r:
+                    self.rect.y = brick.rect.y - r - 0.001
+                    self.onplatform = True
+                    self.yvel = 0
+                    self.jumpable= True
+        # grounding detecting
+        # for brick in brickgroup:
+        #    if self.onplatform== False and self.ground == False and self.yvel > 0 and abs(brick.rect.y -self.rect.y-r)<=self.yvel and abs(brick.rect.x - self.rect.x)<= r :
+        #        self.rect.y = brick.rect.y-r
+        #        self.onplatform = True
+        #        self.ground = True
+        #        self.yvel = 0
+        #        print('a')
+        #        break
+        if self.rect.y > 500:
+            self.rect.y = 500
+            self.jumpable = True
+            self.onplatform = True
+            self.yvel = 0
+        elif self.rect.y < 500 and self.onplatform == False:
+            self.jumpable = False
+
+        if self.onplatform == False:
             self.yvel = self.yvel + self.g
             # if over adding
             # if self.yvel >30:
             #    self.yvel = 30
-        # grounding detecting
-        for brick in brickgroup:
-            if self.ground == False and self.yvel > 0 and brick.rect.y - int(self.yvel) <= self.rect.y+r and self.rect.y+r<= brick.rect.y + int(self.yvel) and brick.rect.x - r <= self.rect.x and self.rect.x <= brick.rect.x + r :
-                self.rect.y = brick.rect.y-r
-                self.onplatform = True
-                self.ground = True
-                self.yvel = 0
-                if self.jumptimer > 5:
-                    self.jump = False
-        if self.rect.y > 500 or self.onplatform == True:
-            self.ground = True
-            if self.rect.y > 500:
-                self.rect.y = 500
-            if self.jumptimer > 5:
-                self.yvel = 0
-                self.jump = False
-        elif self.rect.y < 500 and self.onplatform == False:
-            self.ground = False
-
         if self.rect.x > 1020:
             self.rect.x = -20
-        if self.rect.x < -20:
+        elif self.rect.x < -20:
             self.rect.x = 1020
 
         screen.blit(self.image, (self.rect.x, self.rect.y))
-        self.onplatform=False
+        self.onplatform = False
+
 
 class Object(pygame.sprite.Sprite):
     def __init__(self, x, y, image):

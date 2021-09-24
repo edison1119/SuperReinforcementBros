@@ -138,6 +138,9 @@ class Player(pygame.sprite.Sprite):
             if self.right and not self.wall and abs(rely)<=r and abs(relx-r)<=abs(self.xvel):
                 self.wall = True
                 self.rect.x=brick.rect.x-r
+            if self.left and not self.wall and abs(rely)<=r and abs(relx+r)<=abs(self.xvel):
+                self.wall = True
+                self.rect.x=brick.rect.x+r
         # for brick in brickgroup:
         #    if self.onplatform== False and self.ground == False and self.yvel > 0 and abs(brick.rect.y -self.rect.y-r)<=self.yvel and abs(brick.rect.x - self.rect.x)<= r :
         #        self.rect.y = brick.rect.y-r

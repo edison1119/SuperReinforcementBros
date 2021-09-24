@@ -36,7 +36,7 @@ class Player(pygame.sprite.Sprite):
         self.xvel = 0
         self.yvel = 0
         self.g = r * 67.82 / framerate ** 2
-        self.jumph = r * 17.36 / framerate
+        #self.jumph = r * 17.36 / framerate
 
         # movement state
         self.right = False
@@ -49,7 +49,7 @@ class Player(pygame.sprite.Sprite):
         self.runtimer = 0
         self.stop = True
         self.jumpable = True
-
+        self.wall = False
     def nextframe(self, c):
         """
         0: No movement
@@ -100,6 +100,7 @@ class Player(pygame.sprite.Sprite):
 
         #gravity check
         if self.jumptimer == 5 and self.jump:
+            self.rect.y -=1
             if self.jumphold:
                 self.yvel = r * -15.21 / framerate
                 self.g = r * 34.79 / framerate ** 2
@@ -121,11 +122,7 @@ class Player(pygame.sprite.Sprite):
                 self.xvel = -3.7 * r / framerate
         else:
             self.xvel = 0
-        # xvel process
-        self.rect.x = self.rect.x + self.xvel
-        # yvel process
-        print('yvel', self.yvel)
-        self.rect.y = self.rect.y + self.yvel
+
 
         # ground detecting
         for brick in brickgroup:
@@ -137,6 +134,10 @@ class Player(pygame.sprite.Sprite):
                 self.yvel = 0
                 self.jumpable = True
                 break
+            print(relx-r)
+            if self.right and not self.wall and abs(rely)<=r and abs(relx-r)<=abs(self.xvel):
+                self.wall = True
+                self.rect.x=brick.rect.x-r
         # for brick in brickgroup:
         #    if self.onplatform== False and self.ground == False and self.yvel > 0 and abs(brick.rect.y -self.rect.y-r)<=self.yvel and abs(brick.rect.x - self.rect.x)<= r :
         #        self.rect.y = brick.rect.y-r
@@ -146,7 +147,7 @@ class Player(pygame.sprite.Sprite):
         #        print('a')
         #        break
         if self.rect.y > 500:
-            self.rect.y = 500
+            self.rect.y = 501
             self.jumpable = True
             self.onplatform = True
             self.yvel = 0
@@ -164,9 +165,16 @@ class Player(pygame.sprite.Sprite):
             self.rect.x = -20
         elif self.rect.x < -20:
             self.rect.x = 1020
-
+        # xvel process
+        if not self.wall:
+            self.rect.x = self.rect.x + self.xvel
+        # yvel process
+        print('yvel', self.yvel)
+        self.rect.y = self.rect.y + self.yvel
+        # blit
         screen.blit(self.image, (self.rect.x, self.rect.y))
         self.onplatform = False
+        self.wall = False
 
 
 class Object(pygame.sprite.Sprite):

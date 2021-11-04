@@ -21,6 +21,7 @@ brickpic = pygame.transform.scale(brickpic, (r, r))
 blue = pygame.transform.scale(bluepic, (r, r))
 
 framerate = 30
+next_stage = False
 
 
 # classes
@@ -200,10 +201,12 @@ class Object(pygame.sprite.Sprite):
 
 class Brick(Object):
     def __init__(self, x, y, image):
+        self.image = image
         super().__init__(x, y, image)
 
     def update(self):
-
+        if next_stage:
+            super().__init__(random.randint(0,1000//38)*38+19, random.randint(0,600 // 38) * 38 + 19, self.image)
         super(Brick, self).update()
 
 

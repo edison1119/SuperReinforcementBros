@@ -5,6 +5,7 @@
 import time
 import pygame
 from pygame.locals import *
+import random
 
 pygame.init()
 
@@ -202,6 +203,7 @@ class Brick(Object):
         super().__init__(x, y, image)
 
     def update(self):
+
         super(Brick, self).update()
 
 

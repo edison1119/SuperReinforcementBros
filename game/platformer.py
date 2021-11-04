@@ -15,9 +15,11 @@ pygame.display.set_caption('platformer')
 # picture import
 bluepic = pygame.image.load('blue.bmp')
 brickpic = pygame.image.load('brick.bmp')
+keypic = pygame.image.load('whitesquare.bmp')
 r = 38
-brickpic = pygame.transform.scale(brickpic, (r, r))
 blue = pygame.transform.scale(bluepic, (r, r))
+brickpic = pygame.transform.scale(brickpic, (r, r))
+keypic=pygame.transform.scale(keypic,(r,r))
 
 framerate = 30
 
@@ -62,7 +64,9 @@ class Player(pygame.sprite.Sprite):
         6: right + sprint (fireball)
         7: 5 + 6
         """
-
+    def Motion(self,e):
+        if e==1:
+            self.run =True
     def pressbutton(self, event):
         #TODO replace with functions (port for AI)
         if event.key == K_e and (self.right or self.left):
@@ -134,14 +138,14 @@ class Player(pygame.sprite.Sprite):
                 self.onplatform = True
                 self.yvel = 0
                 self.jumpable = True
-                break
             print(relx-r)
             if self.right and not self.wall and abs(rely)<=r and abs(relx-r)<=abs(self.xvel):
                 self.wall = True
                 self.rect.x=brick.rect.x-r
-            if self.left and not self.wall and abs(rely)<=r and abs(relx+r)<=abs(self.xvel):
+            elif self.left and not self.wall and abs(rely)<=r and abs(relx+r)<=abs(self.xvel):
                 self.wall = True
                 self.rect.x=brick.rect.x+r
+
         # for brick in brickgroup:
         #    if self.onplatform== False and self.ground == False and self.yvel > 0 and abs(brick.rect.y -self.rect.y-r)<=self.yvel and abs(brick.rect.x - self.rect.x)<= r :
         #        self.rect.y = brick.rect.y-r

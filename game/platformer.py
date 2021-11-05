@@ -232,5 +232,8 @@ while run:
     screen.fill((0, 0, 0))
     brickgroup.update()
     player.update()
-    screen.blit(keypic,(38,0))
+    if player.right:
+        screen.blit(keypic,(76,38))
+    if player.left:
+        screen.blit(keypic,(0,38))
     pygame.display.update()

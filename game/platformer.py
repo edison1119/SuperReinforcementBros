@@ -80,7 +80,7 @@ class Player(pygame.sprite.Sprite):
                 self.jump = True
                 self.jumphold = True
                 self.jumptimer = 0
-
+                print('JUMP')
     def unpressbutton(self, event):
         if event.key == K_RIGHT or event.key == K_d:
             self.right = False
@@ -93,7 +93,7 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         # movement
-        print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
+        #print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
         if not self.right and not self.left:
             self.runtimer += 1
         else:
@@ -109,9 +109,11 @@ class Player(pygame.sprite.Sprite):
             if self.jumphold:
                 self.yvel = r * -15.21 / framerate
                 self.g = r * 34.79 / framerate ** 2
+                print('Big')
             else:
                 self.yvel = r * -17.36 / framerate
                 self.g = r * 67.82 / framerate ** 2
+                print('small')
             self.jump = False
 
         # directional movement, running
@@ -138,7 +140,7 @@ class Player(pygame.sprite.Sprite):
                 self.onplatform = True
                 self.yvel = 0
                 self.jumpable = True
-            print(relx-r)
+            #print(relx-r)
             if self.right and not self.wall and abs(rely)<=r and abs(relx-r)<=abs(self.xvel):
                 self.wall = True
                 self.rect.x=brick.rect.x-r
@@ -177,7 +179,7 @@ class Player(pygame.sprite.Sprite):
         if not self.wall:
             self.rect.x = self.rect.x + self.xvel
         # yvel process
-        print('yvel', self.yvel)
+        #print('yvel', self.yvel)
         self.rect.y = self.rect.y + self.yvel
         # blit
         screen.blit(self.image, (self.rect.x, self.rect.y))
@@ -217,7 +219,7 @@ run = True
 Clock = pygame.time.Clock()
 while run:
     Clock.tick(framerate)
-    print(Clock.get_fps())
+    #print(Clock.get_fps())
     for event in pygame.event.get():
         if event.type == KEYDOWN:
             player.pressbutton(event)
@@ -230,4 +232,5 @@ while run:
     screen.fill((0, 0, 0))
     brickgroup.update()
     player.update()
+    screen.blit(keypic,(38,0))
     pygame.display.update()

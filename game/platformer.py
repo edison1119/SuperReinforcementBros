@@ -90,6 +90,7 @@ class Player(pygame.sprite.Sprite):
             self.jumphold = False
 
     def update(self):
+        global next_stage
         # movement
         print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
         if not self.right and not self.left:
@@ -169,6 +170,7 @@ class Player(pygame.sprite.Sprite):
             self.g = r * 55.88 / framerate ** 2
         if self.rect.x > 1020:
             self.rect.x = -20
+            next_stage = True
         elif self.rect.x < -20:
             self.rect.x = 1020
         # xvel process
@@ -229,6 +231,10 @@ while run:
             pygame.quit()
             exit()
     screen.fill((0, 0, 0))
+    if next_stage:
+        brickgroup.empty()
+        for x in range(random.randint(1, 10)):
+            brickgroup.add(brick)
     brickgroup.update()
     player.update()
     pygame.display.update()

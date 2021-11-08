@@ -16,11 +16,9 @@ pygame.display.set_caption('platformer')
 # picture import
 bluepic = pygame.image.load('blue.bmp')
 brickpic = pygame.image.load('brick.bmp')
-keypic = pygame.image.load('whitesquare.bmp')
 r = 38
-blue = pygame.transform.scale(bluepic, (r, r))
 brickpic = pygame.transform.scale(brickpic, (r, r))
-keypic=pygame.transform.scale(keypic,(r,r))
+blue = pygame.transform.scale(bluepic, (r, r))
 
 framerate = 30
 next_stage = False
@@ -66,9 +64,7 @@ class Player(pygame.sprite.Sprite):
         6: right + sprint (fireball)
         7: 5 + 6
         """
-    def Motion(self,e):
-        if e==1:
-            self.run =True
+
     def pressbutton(self, event):
         #TODO replace with functions (port for AI)
         if event.key == K_e and (self.right or self.left):
@@ -82,7 +78,7 @@ class Player(pygame.sprite.Sprite):
                 self.jump = True
                 self.jumphold = True
                 self.jumptimer = 0
-                print('JUMP')
+
     def unpressbutton(self, event):
         if event.key == K_RIGHT or event.key == K_d:
             self.right = False
@@ -96,7 +92,7 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         global next_stage
         # movement
-        #print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
+        print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
         if not self.right and not self.left:
             self.runtimer += 1
         else:
@@ -112,11 +108,9 @@ class Player(pygame.sprite.Sprite):
             if self.jumphold:
                 self.yvel = r * -15.21 / framerate
                 self.g = r * 34.79 / framerate ** 2
-                print('Big')
             else:
                 self.yvel = r * -17.36 / framerate
                 self.g = r * 67.82 / framerate ** 2
-                print('small')
             self.jump = False
 
         # directional movement, running
@@ -143,14 +137,14 @@ class Player(pygame.sprite.Sprite):
                 self.onplatform = True
                 self.yvel = 0
                 self.jumpable = True
-            #print(relx-r)
+                break
+            print(relx-r)
             if self.right and not self.wall and abs(rely)<=r and abs(relx-r)<=abs(self.xvel):
                 self.wall = True
                 self.rect.x=brick.rect.x-r
-            elif self.left and not self.wall and abs(rely)<=r and abs(relx+r)<=abs(self.xvel):
+            if self.left and not self.wall and abs(rely)<=r and abs(relx+r)<=abs(self.xvel):
                 self.wall = True
                 self.rect.x=brick.rect.x+r
-
         # for brick in brickgroup:
         #    if self.onplatform== False and self.ground == False and self.yvel > 0 and abs(brick.rect.y -self.rect.y-r)<=self.yvel and abs(brick.rect.x - self.rect.x)<= r :
         #        self.rect.y = brick.rect.y-r
@@ -183,7 +177,7 @@ class Player(pygame.sprite.Sprite):
         if not self.wall:
             self.rect.x = self.rect.x + self.xvel
         # yvel process
-        #print('yvel', self.yvel)
+        print('yvel', self.yvel)
         self.rect.y = self.rect.y + self.yvel
         # blit
         screen.blit(self.image, (self.rect.x, self.rect.y))
@@ -209,9 +203,7 @@ class Object(pygame.sprite.Sprite):
 
 class Brick(Object):
     def __init__(self, x, y, image):
-        self.image = image
         super().__init__(x, y, image)
-
     def update(self):
         if next_stage:
             super().__init__(random.randint(0,1000//38)*38+19, random.randint(0,600 // 38) * 38 + 19, self.image)
@@ -226,7 +218,7 @@ run = True
 Clock = pygame.time.Clock()
 while run:
     Clock.tick(framerate)
-    #print(Clock.get_fps())
+    print(Clock.get_fps())
     for event in pygame.event.get():
         if event.type == KEYDOWN:
             player.pressbutton(event)
@@ -243,8 +235,4 @@ while run:
             brickgroup.add(brick)
     brickgroup.update()
     player.update()
-    if player.right:
-        screen.blit(keypic,(76,38))
-    if player.left:
-        screen.blit(keypic,(0,38))
     pygame.display.update()

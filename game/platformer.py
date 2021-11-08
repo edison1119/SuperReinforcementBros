@@ -14,11 +14,15 @@ pygame.init()
 screen = pygame.display.set_mode((1000, 600))
 pygame.display.set_caption('platformer')
 # picture import
-bluepic = pygame.image.load('blue.bmp')
 brickpic = pygame.image.load('brick.bmp')
+bluepic = pygame.image.load('blue.bmp')
+keypic = pygame.image.load('whitesquare.bmp')
+
 r = 38
 brickpic = pygame.transform.scale(brickpic, (r, r))
 blue = pygame.transform.scale(bluepic, (r, r))
+keypic=pygame.transform.scale(keypic,(r,r))
+
 
 framerate = 30
 next_stage = False
@@ -92,7 +96,7 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         global next_stage
         # movement
-        print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
+        #print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
         if not self.right and not self.left:
             self.runtimer += 1
         else:
@@ -137,12 +141,10 @@ class Player(pygame.sprite.Sprite):
                 self.onplatform = True
                 self.yvel = 0
                 self.jumpable = True
-                break
-            print(relx-r)
-            if self.right and not self.wall and abs(rely)<=r and abs(relx-r)<=abs(self.xvel):
+            elif self.right and not self.wall and abs(rely)<=r and abs(relx-r)<=abs(self.xvel):
                 self.wall = True
                 self.rect.x=brick.rect.x-r
-            if self.left and not self.wall and abs(rely)<=r and abs(relx+r)<=abs(self.xvel):
+            elif self.left and not self.wall and abs(rely)<=r and abs(relx+r)<=abs(self.xvel):
                 self.wall = True
                 self.rect.x=brick.rect.x+r
         # for brick in brickgroup:
@@ -177,7 +179,7 @@ class Player(pygame.sprite.Sprite):
         if not self.wall:
             self.rect.x = self.rect.x + self.xvel
         # yvel process
-        print('yvel', self.yvel)
+        #print('yvel', self.yvel)
         self.rect.y = self.rect.y + self.yvel
         # blit
         screen.blit(self.image, (self.rect.x, self.rect.y))
@@ -198,15 +200,12 @@ class Object(pygame.sprite.Sprite):
 
     def update(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
-        pygame.display.flip()
-
 
 class Brick(Object):
     def __init__(self, x, y, image):
         super().__init__(x, y, image)
     def update(self):
-        if next_stage:
-            super().__init__(random.randint(0,1000//38)*38+19, random.randint(0,600 // 38) * 38 + 19, self.image)
+
         super(Brick, self).update()
 
 
@@ -232,7 +231,12 @@ while run:
     if next_stage:
         brickgroup.empty()
         for x in range(random.randint(1, 10)):
-            brickgroup.add(brick)
+            brickgroup.add(Brick(random.randint(0,1000//38)*38+19, random.randint(0,600 // 38) * 38 + 19, brickpic))
+        next_stage=False
+    if player.right:
+        screen.blit(keypic,(76,38))
+    if player.left:
+        screen.blit(keypic,(0,38))
     brickgroup.update()
     player.update()
     pygame.display.update()

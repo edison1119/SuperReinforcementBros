@@ -77,14 +77,19 @@ class Player(pygame.sprite.Sprite):
         fourth : right
         fifth  : sprint (fireball)
         """
+
     def pressbutton(self, event):
         # TODO replace with functions (port for AI)
+
         if event.key == K_e and (self.right or self.left):
             self.run = True
+
         if event.key == K_RIGHT or event.key == K_d:
             self.right = True
+
         if event.key == K_LEFT or event.key == K_a:
             self.left = True
+
         if event.key == K_w or event.key == K_UP:
             if not self.jump and self.jumpable:
                 self.jump = True
@@ -167,7 +172,7 @@ class Player(pygame.sprite.Sprite):
         #        self.yvel = 0
         #        print('a')
         #        break
-        #print(self.onplatform)
+        # print(self.onplatform)
         if self.rect.y > 500:
             self.rect.y = 501
             self.jumpable = True
@@ -221,6 +226,7 @@ class Brick(Object):
     def update(self):
         super(Brick, self).update()
 
+
 def generate_stage():
     fill = set()
     brickgroup.empty()
@@ -230,6 +236,8 @@ def generate_stage():
         print(str(a).zfill(2) + str(b))
     for i in fill:
         brickgroup.add(Brick(int(i[:2]) * 38 + 19, int(i[2:]) * 39 + 19, brickpic))
+
+
 brickgroup = pygame.sprite.Group()
 brick = Brick(400, 400, brickpic)
 brickgroup.add(brick)

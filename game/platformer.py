@@ -58,16 +58,25 @@ class Player(pygame.sprite.Sprite):
 
     def nextframe(self, c):
         """
+        (old solution)
         0: No movement
         1: jump
         2: squat / pipe
         3: left
         4: right
         5: right + jump
-        6: right + sprint (fireball)
+        6: sprint (fireball)
         7: 5 + 6
         """
-
+        """
+        (new solution)
+        5 digit bit -> 00000
+        first  : jump
+        second : pipe
+        third  : left
+        fourth : right
+        fifth  : sprint (fireball)
+        """
     def pressbutton(self, event):
         # TODO replace with functions (port for AI)
         if event.key == K_e and (self.right or self.left):

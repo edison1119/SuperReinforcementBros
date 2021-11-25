@@ -70,6 +70,7 @@ class Player(pygame.sprite.Sprite):
         """
         """
         (new solution)
+        string or int
         5 digit bit -> 00000
         first  : jump
         second : pipe
@@ -77,6 +78,26 @@ class Player(pygame.sprite.Sprite):
         fourth : right
         fifth  : sprint (fireball)
         """
+        if c[0] == "1":
+            if not self.jump and self.jumpable:
+                self.jump = True
+                self.jumphold = True
+                self.jumptimer = 0
+        else:
+            self.jumphold = False
+        if c[1] == "1":
+            pass
+            # TODO not yet (or never will)
+        if c[2] == "1":
+            self.left = True
+        else:
+            self.left = False
+        if c[3] == "1":
+            self.right = True
+        else:
+            self.right = False
+        if c[4] == "1":
+            self.run = True
 
     def pressbutton(self, event):
         # TODO replace with functions (port for AI)
@@ -148,20 +169,20 @@ class Player(pygame.sprite.Sprite):
         for brick in brickgroup:
             relx = brick.rect.x - self.rect.x
             rely = brick.rect.y - self.rect.y
-            if not self.onplatform and self.yvel >= 0 and abs(rely - r) <= self.yvel + .001 and abs(relx) < r-1:
+            if not self.onplatform and self.yvel >= 0 and abs(rely - r) <= self.yvel + .001 and abs(relx) < r - 1:
                 self.rect.y = brick.rect.y - r + 0.001
                 self.onplatform = True
                 self.yvel = 0
                 self.jumpable = True
-            elif not self.onplatform and self.yvel<=0 and abs(rely+r)<=-self.yvel+.001 and abs(relx)<r:
-                self.rect.y= brick.rect.y+r
-                self.yvel=0
+            elif not self.onplatform and self.yvel <= 0 and abs(rely + r) <= -self.yvel + .001 and abs(relx) < r:
+                self.rect.y = brick.rect.y + r
+                self.yvel = 0
                 brick.kill()
 
-            elif self.right and not self.wall and abs(rely+0.001) <= r and abs(relx - r) < abs(self.xvel)+0.01:
+            elif self.right and not self.wall and abs(rely + 0.001) <= r and abs(relx - r) < abs(self.xvel) + 0.01:
                 self.wall = True
                 self.rect.x = brick.rect.x - r
-            elif self.left and not self.wall and abs(rely+0.001) <= r and abs(relx + r) < abs(self.xvel)+0.01:
+            elif self.left and not self.wall and abs(rely + 0.001) <= r and abs(relx + r) < abs(self.xvel) + 0.01:
                 self.wall = True
                 self.rect.x = brick.rect.x + r
         # for brick in brickgroup:

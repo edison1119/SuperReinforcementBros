@@ -78,6 +78,8 @@ class Player(pygame.sprite.Sprite):
         fourth : right
         fifth  : sprint (fireball)
         """
+        if isinstance(c,int):
+            c = str(c)
         if c[0] == "1":
             if not self.jump and self.jumpable:
                 self.jump = True
@@ -174,7 +176,7 @@ class Player(pygame.sprite.Sprite):
                 self.onplatform = True
                 self.yvel = 0
                 self.jumpable = True
-            elif not self.onplatform and self.yvel <= 0 and abs(rely + r) <= -self.yvel + .001 and abs(relx) < r:
+            elif not self.onplatform and self.yvel <= 0 and abs(rely + r) <= -self.yvel + .001 and abs(relx) < r-1-1:
                 self.rect.y = brick.rect.y + r
                 self.yvel = 0
                 brick.kill()
@@ -185,8 +187,14 @@ class Player(pygame.sprite.Sprite):
             elif self.left and not self.wall and abs(rely + 0.001) <= r and abs(relx + r) < abs(self.xvel) + 0.01:
                 self.wall = True
                 self.rect.x = brick.rect.x + r
+        for spike in spikegroup:
+            relx= spike.rect.x-self.rect.x
+            rely=spike.rect.y-self.rect.y
+            if abs(rely)<r-1 and abs(relx)<r-1:
+                self.kill()
         # for brick in brickgroup:
-        #    if self.onplatform== False and self.ground == False and self.yvel > 0 and abs(brick.rect.y -self.rect.y-r)<=self.yvel and abs(brick.rect.x - self.rect.x)<= r :
+        #    if self.onplatform== False and self.ground == False and self.yvel > 0 and abs(brick.rect.y -self.rect.y-r)
+        #                                                          <=self.yvel and abs(brick.rect.x - self.rect.x)<= r :
         #        self.rect.y = brick.rect.y-r
         #        self.onplatform = True
         #        self.ground = True
@@ -248,6 +256,11 @@ class Brick(Object):
         super(Brick, self).update()
 
 
+class Spike(Object):
+    def __init__(self,x,y,image):
+        super().__init__(x,y,image)
+    def update(self):
+        super(Spike,self).update()
 def generate_stage():
     fill = set()
     brickgroup.empty()
@@ -258,9 +271,10 @@ def generate_stage():
     for i in fill:
         brickgroup.add(Brick(int(i[:2]) * 38 + 19, int(i[2:]) * 39 + 19, brickpic))
 
-
+spikegroup = pygame.sprite.Group()
 brickgroup = pygame.sprite.Group()
 brick = Brick(400, 400, brickpic)
+spike=Spike(400,400,)
 brickgroup.add(brick)
 player = Player()
 run = True

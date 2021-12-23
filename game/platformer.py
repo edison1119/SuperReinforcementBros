@@ -266,15 +266,20 @@ def generate_stage():
     brickgroup.empty()
     for x in range(random.randint(5, 30)):
         a, b = random.randint(0, 26), random.randint(10, 13)
+        i=1
+        d=1
+        while str(a).zfill(2) + str(b) in fill:
+            a+=i*d
+            i+=1
+            d=-d
         fill.add(str(a).zfill(2) + str(b))
-        print(str(a).zfill(2) + str(b))
     for i in fill:
         brickgroup.add(Brick(int(i[:2]) * 38 + 19, int(i[2:]) * 39 + 19, brickpic))
 
 spikegroup = pygame.sprite.Group()
 brickgroup = pygame.sprite.Group()
 brick = Brick(400, 400, brickpic)
-spike=Spike(400,400,)
+#spike=Spike(400,400,)
 brickgroup.add(brick)
 player = Player()
 run = True

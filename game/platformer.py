@@ -58,8 +58,9 @@ class Player(pygame.sprite.Sprite):
         self.jumpable = True
         self.wall = False
 
-        #player state
-        self.isalive=True
+        # player state
+        self.isalive = True
+
     def nextframe(self, c):
         """
         (old solution)
@@ -196,7 +197,7 @@ class Player(pygame.sprite.Sprite):
             relx = spike.rect.x - self.rect.x
             rely = spike.rect.y - self.rect.y
             if abs(rely) < r - 1 and abs(relx) < r - 1:
-                self.isalive=False
+                self.isalive = False
         # for brick in brickgroup:
         #    if self.onplatform== False and self.ground == False and self.yvel > 0 and abs(brick.rect.y -self.rect.y-r)
         #                                                          <=self.yvel and abs(brick.rect.x - self.rect.x)<= r :
@@ -286,7 +287,7 @@ def generate_stage():
             d = -d
         fill.add(str(a).zfill(2) + str(b))
     for i in fill:
-        brickgroup.add(Brick(int(i[:2]) * 38 + 19, 500- int(i[2:]) *39, brickpic))
+        brickgroup.add(Brick(int(i[:2]) * 38 + 19, 500 - int(i[2:]) * 39, brickpic))
     if spiking:
         for x in range(random.randint(2, 10)):
             a = random.randint(2, 24)
@@ -297,7 +298,8 @@ def generate_stage():
                 i += 1
                 d = -d
             fill.add(str(a).zfill(2) + "0")
-            spikegroup.add(Spike(a * 38 + 19, 500, spikepic)) #526 = 13*39+19
+            spikegroup.add(Spike(a * 38 + 19, 500, spikepic))  # 526 = 13*39+19
+
 
 spikegroup = pygame.sprite.Group()
 brickgroup = pygame.sprite.Group()

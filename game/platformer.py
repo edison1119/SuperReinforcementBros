@@ -197,7 +197,6 @@ class Player(pygame.sprite.Sprite):
             rely = spike.rect.y - self.rect.y
             if abs(rely) < r - 1 and abs(relx) < r - 1:
                 self.isalive=False
-                print('1')
         # for brick in brickgroup:
         #    if self.onplatform== False and self.ground == False and self.yvel > 0 and abs(brick.rect.y -self.rect.y-r)
         #                                                          <=self.yvel and abs(brick.rect.x - self.rect.x)<= r :

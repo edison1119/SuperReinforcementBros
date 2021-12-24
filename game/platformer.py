@@ -16,10 +16,12 @@ pygame.display.set_caption('platformer')
 brickpic = pygame.image.load('brick.bmp')
 bluepic = pygame.image.load('blue.bmp')
 keypic = pygame.image.load('whitesquare.bmp')
+spikepic = pygame.image.load('spike.bmp')
 
 r = 38
+spikepic = pygame.transform.scale(spikepic, (r, r))
 brickpic = pygame.transform.scale(brickpic, (r, r))
-blue = pygame.transform.scale(bluepic, (r, r))
+bluepic = pygame.transform.scale(bluepic, (r, r))
 keypic = pygame.transform.scale(keypic, (r, r))
 
 framerate = 30
@@ -32,7 +34,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         # image
-        self.image = blue
+        self.image = bluepic
 
         # initial value & rect
         self.rect = self.image.get_rect()
@@ -56,6 +58,8 @@ class Player(pygame.sprite.Sprite):
         self.jumpable = True
         self.wall = False
 
+        #player state
+        self.isalive=True
     def nextframe(self, c):
         """
         (old solution)
@@ -78,7 +82,7 @@ class Player(pygame.sprite.Sprite):
         fourth : right
         fifth  : sprint (fireball)
         """
-        if isinstance(c,int):
+        if isinstance(c, int):
             c = str(c)
         if c[0] == "1":
             if not self.jump and self.jumpable:
@@ -176,7 +180,8 @@ class Player(pygame.sprite.Sprite):
                 self.onplatform = True
                 self.yvel = 0
                 self.jumpable = True
-            elif not self.onplatform and self.yvel <= 0 and abs(rely + r) <= -self.yvel + .001 and abs(relx) < r-1-1:
+            elif not self.onplatform and self.yvel <= 0 and abs(rely + r) <= -self.yvel + .001 and abs(
+                    relx) < r - 1 - 1:
                 self.rect.y = brick.rect.y + r
                 self.yvel = 0
                 brick.kill()
@@ -188,10 +193,11 @@ class Player(pygame.sprite.Sprite):
                 self.wall = True
                 self.rect.x = brick.rect.x + r
         for spike in spikegroup:
-            relx= spike.rect.x-self.rect.x
-            rely=spike.rect.y-self.rect.y
-            if abs(rely)<r-1 and abs(relx)<r-1:
-                self.kill()
+            relx = spike.rect.x - self.rect.x
+            rely = spike.rect.y - self.rect.y
+            if abs(rely) < r - 1 and abs(relx) < r - 1:
+                self.isalive=False
+                print('1')
         # for brick in brickgroup:
         #    if self.onplatform== False and self.ground == False and self.yvel > 0 and abs(brick.rect.y -self.rect.y-r)
         #                                                          <=self.yvel and abs(brick.rect.x - self.rect.x)<= r :
@@ -257,29 +263,47 @@ class Brick(Object):
 
 
 class Spike(Object):
-    def __init__(self,x,y,image):
-        super().__init__(x,y,image)
+    def __init__(self, x, y, image):
+        super().__init__(x, y, image)
+
     def update(self):
-        super(Spike,self).update()
+        super(Spike, self).update()
+
+
+spiking = True
+
+
 def generate_stage():
     fill = set()
     brickgroup.empty()
+    spikegroup.empty()
     for x in range(random.randint(5, 30)):
-        a, b = random.randint(0, 26), random.randint(10, 13)
-        i=1
-        d=1
+        a, b = random.randint(0, 26), random.randint(0, 3)
+        i = 1
+        d = 1
         while str(a).zfill(2) + str(b) in fill:
-            a+=i*d
-            i+=1
-            d=-d
+            a += i * d
+            i += 1
+            d = -d
         fill.add(str(a).zfill(2) + str(b))
     for i in fill:
-        brickgroup.add(Brick(int(i[:2]) * 38 + 19, int(i[2:]) * 39 + 19, brickpic))
+        brickgroup.add(Brick(int(i[:2]) * 38 + 19, 500- int(i[2:]) *39, brickpic))
+    if spiking:
+        for x in range(random.randint(2, 10)):
+            a = random.randint(2, 24)
+            i = 1
+            d = 1
+            while str(a).zfill(2) + "0" in fill:
+                a += i * d
+                i += 1
+                d = -d
+            fill.add(str(a).zfill(2) + "0")
+            spikegroup.add(Spike(a * 38 + 19, 500, spikepic)) #526 = 13*39+19
 
 spikegroup = pygame.sprite.Group()
 brickgroup = pygame.sprite.Group()
 brick = Brick(400, 400, brickpic)
-#spike=Spike(400,400,)
+spike = Spike(400, 400, spikepic)
 brickgroup.add(brick)
 player = Player()
 run = True
@@ -301,5 +325,7 @@ while run:
     if player.left:
         screen.blit(keypic, (0, 38))
     brickgroup.update()
-    player.update()
+    spikegroup.update()
+    if player.isalive:
+        player.update()
     pygame.display.update()

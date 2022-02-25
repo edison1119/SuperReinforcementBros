@@ -1,0 +1,3 @@
+show image
+make player move
+record action

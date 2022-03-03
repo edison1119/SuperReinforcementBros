@@ -1056,6 +1056,10 @@ class DQNAgent:
             # Double DQN
             next_action = self.dqn(next_state).argmax(1)
             next_dist = self.dqn_target.dist(next_state)
+            print("next action:", next_action.shape)  # torch.Size([11520])
+            print(next_dist.shape)  # torch.Size([11520, 5, 51])
+            # TODO Fix this
+            #  IndexError: shape mismatch: indexing tensors could not be broadcast together with shapes [128], [11520]
             next_dist = next_dist[range(self.batch_size), next_action]
 
             t_z = reward + (1 - done) * gamma * self.support

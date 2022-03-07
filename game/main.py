@@ -346,13 +346,13 @@ class CustomEnv(gym.Env):
 
     def reset(self):
         self.__init__()
-        re = np.array(
-            [np.concatenate((np.array([[self.player.rect.x, self.player.rect.y]]), np.empty((29, 2))), axis=0),
-             np.concatenate((np.array([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
-                             np.empty((30 - len(brickgroup), 2))), axis=0) if len(brickgroup) else np.empty((30, 2)),
-             np.concatenate((np.array([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
-                             np.empty((30 - len(spikegroup), 2))), axis=0) if len(spikegroup) else np.empty((30, 2))],
-            dtype=np.float32)  # shape = (3, 30, 2)
+        re = np.concatenate((
+            np.concatenate((np.array([self.player.rect.x, self.player.rect.y]), np.empty((58)))),
+             np.concatenate((np.concatenate([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
+                             np.empty((60 - len(brickgroup)*2)))) if len(brickgroup) else np.empty((60)),
+             np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
+                             np.empty((60 - len(spikegroup)*2)))) if len(spikegroup) else np.empty((60))),
+            )
         return re
 
     def step(self, action):
@@ -363,13 +363,13 @@ class CustomEnv(gym.Env):
             spike.update()
         if self.player.isalive:
             self.player.update(action)
-        returner = np.array(
-            [np.concatenate((np.array([[self.player.rect.x, self.player.rect.y]]), np.empty((29, 2))), axis=0),
+        returner = np.concatenate((
+            np.concatenate((np.array([[self.player.rect.x, self.player.rect.y]]), np.empty((29, 2))), axis=0),
              np.concatenate((np.array([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
                              np.empty((30 - len(brickgroup), 2))), axis=0) if len(brickgroup) else np.empty((30, 2)),
              np.concatenate((np.array([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
-                             np.empty((30 - len(spikegroup), 2))), axis=0) if len(spikegroup) else np.empty((30, 2))],
-            dtype=np.float32), \
+                             np.empty((30 - len(spikegroup), 2))), axis=0) if len(spikegroup) else np.empty((30, 2)))
+            ), \
                    self.player.xpos - formerx + (1000 if self.player.finish and self.player.isalive else 0) - (
                        1000 if not self.player.isalive else 0), self.player.finish, {}
         return returner
@@ -427,9 +427,8 @@ class ReplayBuffer:
             n_step: int = 1,
             gamma: float = 0.99
     ):
-        # TODO added 30,2 after obs_dim
-        self.obs_buf = np.zeros([size, obs_dim, 30, 2], dtype=np.float32)
-        self.next_obs_buf = np.zeros([size, obs_dim, 30, 2], dtype=np.float32)
+        self.obs_buf = np.zeros([size, obs_dim], dtype=np.float32)
+        self.next_obs_buf = np.zeros([size, obs_dim], dtype=np.float32)
         self.acts_buf = np.zeros([size], dtype=np.float32)
         self.rews_buf = np.zeros([size], dtype=np.float32)
         self.done_buf = np.zeros(size, dtype=np.float32)
@@ -739,7 +738,6 @@ class Network(nn.Module):
         self.atom_size = atom_size
 
         # set common feature layer
-        # TODO in_dim =>2
         self.feature_layer = nn.Sequential(
             nn.Linear(2, 128),
             nn.ReLU(),

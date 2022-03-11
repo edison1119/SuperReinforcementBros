@@ -738,8 +738,9 @@ class Network(nn.Module):
         self.atom_size = atom_size
 
         # set common feature layer
+        #TODO change from 2 to 1
         self.feature_layer = nn.Sequential(
-            nn.Linear(2, 128),
+            nn.Linear(1, 128),
             nn.ReLU(),
         )
         # set advantage layer

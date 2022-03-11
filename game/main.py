@@ -741,7 +741,6 @@ class Network(nn.Module):
         #TODO change from 2 to 1
         self.feature_layer = nn.Sequential(
             nn.Linear(in_dim, 128),
-            nn.Linear(1, 128),
             nn.ReLU(),
         )
         # set advantage layer

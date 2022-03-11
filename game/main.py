@@ -338,7 +338,7 @@ class CustomEnv(gym.Env):
         self.brickgroup = pygame.sprite.Group()
         self.player = Player()
         self.action_space = spaces.Discrete(5)
-        self.observation_space = spaces.Box(low=0, high=2040, shape=(3, 30, 2), dtype=np.float64)
+        self.observation_space = spaces.Box(low=np.zeros((122,)), high=np.zeros((122,)), dtype=np.float64)
 
     def init_render(self):
         self.screen = pygame.display.set_mode((window_width, window_height))
@@ -347,12 +347,13 @@ class CustomEnv(gym.Env):
     def reset(self):
         self.__init__()
         re = np.concatenate((
-            np.concatenate((np.array([self.player.rect.x, self.player.rect.y]), np.empty((58)))),
+             np.array([self.player.rect.x, self.player.rect.y]),
              np.concatenate((np.concatenate([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
-                             np.empty((60 - len(brickgroup)*2)))) if len(brickgroup) else np.empty((60)),
+                             np.empty((60 - len(brickgroup)*2,)))) if len(brickgroup) else np.empty((60,)),
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
-                             np.empty((60 - len(spikegroup)*2)))) if len(spikegroup) else np.empty((60))),
+                             np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             )
+        print(re.shape)
         return re
 
     def step(self, action):
@@ -364,14 +365,13 @@ class CustomEnv(gym.Env):
         if self.player.isalive:
             self.player.update(action)
         returner = np.concatenate((
-            np.concatenate((np.array([[self.player.rect.x, self.player.rect.y]]), np.empty((29, 2))), axis=0),
-             np.concatenate((np.array([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
-                             np.empty((30 - len(brickgroup), 2))), axis=0) if len(brickgroup) else np.empty((30, 2)),
-             np.concatenate((np.array([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
-                             np.empty((30 - len(spikegroup), 2))), axis=0) if len(spikegroup) else np.empty((30, 2)))
+             np.array([self.player.rect.x, self.player.rect.y]),
+             np.concatenate((np.concatenate([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
+                             np.empty((60 - len(brickgroup)*2,)))) if len(brickgroup) else np.empty((60,)),
+             np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
+                             np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
-                   self.player.xpos - formerx + (1000 if self.player.finish and self.player.isalive else 0) - (
-                       1000 if not self.player.isalive else 0), self.player.finish, {}
+            self.player.xpos - formerx + (1000 if self.player.finish and self.player.isalive else 0) - (1000 if not self.player.isalive else 0), self.player.finish, {}
         return returner
 
     def render(self):
@@ -739,7 +739,7 @@ class Network(nn.Module):
 
         # set common feature layer
         self.feature_layer = nn.Sequential(
-            nn.Linear(2, 128),
+            nn.Linear(in_dim, 128),
             nn.ReLU(),
         )
         # set advantage layer

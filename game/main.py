@@ -1040,7 +1040,7 @@ class DQNAgent:
         return frames
 
     def _compute_dqn_loss(self, samples: Dict[str, np.ndarray], gamma: float) -> torch.Tensor:
-        """Return categorical dqn loss."""
+        """Return categorical dqn loss."""  
         device = self.device  # for shortening the following lines
         state = torch.FloatTensor(samples["obs"]).to(device)
         next_state = torch.FloatTensor(samples["next_obs"]).to(device)
@@ -1134,4 +1134,4 @@ target_update = 100
 # train
 agent = DQNAgent(env, memory_size, batch_size, target_update)
 
-agent.train(num_frames)
+agent.train(num_frames,100000)

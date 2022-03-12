@@ -338,7 +338,7 @@ class CustomEnv(gym.Env):
         self.brickgroup = pygame.sprite.Group()
         self.player = Player()
         self.action_space = spaces.Discrete(5)
-        self.observation_space = spaces.Box(low=0, high=2040, shape=(3, 30, 2), dtype=np.float64)
+        self.observation_space = spaces.Box(low=np.zeros((122,)), high=np.zeros((122,)), dtype=np.float64)
 
     def init_render(self):
         self.screen = pygame.display.set_mode((window_width, window_height))
@@ -346,13 +346,14 @@ class CustomEnv(gym.Env):
 
     def reset(self):
         self.__init__()
-        re = np.array(
-            [np.concatenate((np.array([[self.player.rect.x, self.player.rect.y]]), np.empty((29, 2))), axis=0),
-             np.concatenate((np.array([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
-                             np.empty((30 - len(brickgroup), 2))), axis=0) if len(brickgroup) else np.empty((30, 2)),
-             np.concatenate((np.array([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
-                             np.empty((30 - len(spikegroup), 2))), axis=0) if len(spikegroup) else np.empty((30, 2))],
-            dtype=np.float32)  # shape = (3, 30, 2)
+        re = np.concatenate((
+             np.array([self.player.rect.x, self.player.rect.y]),
+             np.concatenate((np.concatenate([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
+                             np.empty((60 - len(brickgroup)*2,)))) if len(brickgroup) else np.empty((60,)),
+             np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
+                             np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
+            )
+        print(re.shape)
         return re
 
     def step(self, action):
@@ -363,15 +364,14 @@ class CustomEnv(gym.Env):
             spike.update()
         if self.player.isalive:
             self.player.update(action)
-        returner = np.array(
-            [np.concatenate((np.array([[self.player.rect.x, self.player.rect.y]]), np.empty((29, 2))), axis=0),
-             np.concatenate((np.array([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
-                             np.empty((30 - len(brickgroup), 2))), axis=0) if len(brickgroup) else np.empty((30, 2)),
-             np.concatenate((np.array([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
-                             np.empty((30 - len(spikegroup), 2))), axis=0) if len(spikegroup) else np.empty((30, 2))],
-            dtype=np.float32), \
-                   self.player.xpos - formerx + (1000 if self.player.finish and self.player.isalive else 0) - (
-                       1000 if not self.player.isalive else 0), self.player.finish, {}
+        returner = np.concatenate((
+             np.array([self.player.rect.x, self.player.rect.y]),
+             np.concatenate((np.concatenate([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
+                             np.empty((60 - len(brickgroup)*2,)))) if len(brickgroup) else np.empty((60,)),
+             np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
+                             np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
+            ), \
+            self.player.xpos - formerx + (1000 if self.player.finish and self.player.isalive else 0) - (1000 if not self.player.isalive else 0), self.player.finish, {}
         return returner
 
     def render(self):
@@ -427,9 +427,8 @@ class ReplayBuffer:
             n_step: int = 1,
             gamma: float = 0.99
     ):
-        # TODO added 30,2 after obs_dim
-        self.obs_buf = np.zeros([size, obs_dim, 30, 2], dtype=np.float32)
-        self.next_obs_buf = np.zeros([size, obs_dim, 30, 2], dtype=np.float32)
+        self.obs_buf = np.zeros([size, obs_dim], dtype=np.float32)
+        self.next_obs_buf = np.zeros([size, obs_dim], dtype=np.float32)
         self.acts_buf = np.zeros([size], dtype=np.float32)
         self.rews_buf = np.zeros([size], dtype=np.float32)
         self.done_buf = np.zeros(size, dtype=np.float32)
@@ -739,9 +738,9 @@ class Network(nn.Module):
         self.atom_size = atom_size
 
         # set common feature layer
-        # TODO in_dim =>2
+        #TODO change from 2 to in_dim
         self.feature_layer = nn.Sequential(
-            nn.Linear(2, 128),
+            nn.Linear(in_dim, 128),
             nn.ReLU(),
         )
         # set advantage layer
@@ -1041,7 +1040,7 @@ class DQNAgent:
         return frames
 
     def _compute_dqn_loss(self, samples: Dict[str, np.ndarray], gamma: float) -> torch.Tensor:
-        """Return categorical dqn loss."""
+        """Return categorical dqn loss."""  
         device = self.device  # for shortening the following lines
         state = torch.FloatTensor(samples["obs"]).to(device)
         next_state = torch.FloatTensor(samples["next_obs"]).to(device)
@@ -1139,4 +1138,4 @@ target_update = 100
 # train
 agent = DQNAgent(env, memory_size, batch_size, target_update)
 
-agent.train(num_frames)
+agent.train(num_frames,100000)

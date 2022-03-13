@@ -45,6 +45,7 @@ brickgroup = pygame.sprite.Group()
 screen = pygame.display.set_mode((1000, 600))
 
 action_list = []
+temp = []
 
 
 # classes
@@ -126,6 +127,7 @@ class Player(pygame.sprite.Sprite):
             self.right = False
         if c[4] == "1":
             self.run = True
+        temp.append(c)
 
     def pressbutton(self, event):
         # TODO replace with functions (port for AI)
@@ -157,7 +159,7 @@ class Player(pygame.sprite.Sprite):
 
     def update(self, action):
         global next_stage
-        # self.nextframe(f'{action:05b}')
+        self.nextframe(f'{action:05b}')
         # movement
         # print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
         if not self.right and not self.left:
@@ -345,6 +347,7 @@ class CustomEnv(gym.Env):
         self.clock = pygame.time.Clock()
 
     def reset(self):
+        global temp
         self.__init__()
         re = np.concatenate((
              np.array([self.player.rect.x, self.player.rect.y]),
@@ -353,7 +356,8 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             )
-        print(re.shape)
+        action_list.append(temp)
+        temp = []
         return re
 
     def step(self, action):
@@ -981,9 +985,7 @@ class DQNAgent:
         losses = []
         scores = []
         score = 0
-        clock = pygame.time.Clock()
         for frame_idx in range(1, num_frames + 1):
-            clock.tick(30)
             action = self.select_action(state)
             next_state, reward, done = self.step(action)
 
@@ -1135,3 +1137,5 @@ target_update = 100
 agent = DQNAgent(env, memory_size, batch_size, target_update)
 
 agent.train(num_frames,100000)
+with open('record.txt', 'a') as f:
+    f.write('\n'.join(' '.join(n) for n in action_list))

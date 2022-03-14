@@ -45,7 +45,7 @@ brickgroup = pygame.sprite.Group()
 screen = pygame.display.set_mode((1000, 600))
 
 action_list = []
-temp = []
+text = ''
 
 
 # classes
@@ -84,6 +84,7 @@ class Player(pygame.sprite.Sprite):
         self.isalive = True
 
     def nextframe(self, c):
+        global text
         """
         (old solution)
         0: No movement
@@ -127,7 +128,7 @@ class Player(pygame.sprite.Sprite):
             self.right = False
         if c[4] == "1":
             self.run = True
-        temp.append(c)
+        text += c+' '
 
     def pressbutton(self, event):
         # TODO replace with functions (port for AI)
@@ -347,7 +348,7 @@ class CustomEnv(gym.Env):
         self.clock = pygame.time.Clock()
 
     def reset(self):
-        global temp
+        global text
         self.__init__()
         re = np.concatenate((
              np.array([self.player.rect.x, self.player.rect.y]),
@@ -356,8 +357,8 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             )
-        action_list.append(temp)
-        temp = []
+        action_list.append(text)
+        text = ''
         return re
 
     def step(self, action):
@@ -464,7 +465,6 @@ class ReplayBuffer:
             self.n_step_buffer, self.gamma
         )
         obs, act = self.n_step_buffer[0][:2]
-        print(obs.shape, self.obs_buf.shape)
         self.obs_buf[self.ptr] = obs
         self.next_obs_buf[self.ptr] = next_obs
         self.acts_buf[self.ptr] = act
@@ -1138,4 +1138,4 @@ agent = DQNAgent(env, memory_size, batch_size, target_update)
 
 agent.train(num_frames,100000)
 with open('record.txt', 'a') as f:
-    f.write('\n'.join(' '.join(n) for n in action_list))
+    f.write(' '.join(action_list) + '\n')

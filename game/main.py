@@ -376,7 +376,7 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
-            self.player.xpos - formerx + (1000 if self.player.finish and self.player.isalive else 0) - (1000 if not self.player.isalive else 0), self.player.finish, {}
+                   (self.player.xpos - formerx + (1000 if self.player.finish and self.player.isalive else 0) - (1000 if not self.player.isalive else 0))/5000, self.player.finish, {}
         return returner
 
     def render(self):
@@ -979,7 +979,7 @@ class DQNAgent:
     def train(self, num_frames: int, plotting_interval: int = 200):
         """Train the agent."""
         self.is_test = False
-
+        global seed
         state = self.env.reset()
         update_cnt = 0
         losses = []

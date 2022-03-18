@@ -985,6 +985,7 @@ class DQNAgent:
         losses = []
         scores = []
         score = 0
+        text += str(seed)+' '
         for frame_idx in range(1, num_frames + 1):
             action = self.select_action(state)
             next_state, reward, done = self.step(action)
@@ -1017,7 +1018,11 @@ class DQNAgent:
             # plotting
             if frame_idx % plotting_interval == 0:
                 self._plot(frame_idx, scores, losses)
-
+        seed = random.randint(1, 1000)
+        np.random.seed(seed)
+        random.seed(seed)
+        seed_torch(seed)
+        env.seed(seed)
         self.env.close()
 
     def test(self) -> List[np.ndarray]:
@@ -1110,11 +1115,10 @@ class DQNAgent:
         plt.show()
 
 
+
+
+seed = random.randint(1, 1000)
 env = CustomEnv()
-
-seed = 777
-
-
 def seed_torch(seed):
     torch.manual_seed(seed)
     if torch.backends.cudnn.enabled:
@@ -1122,10 +1126,7 @@ def seed_torch(seed):
         torch.backends.cudnn.deterministic = True
 
 
-np.random.seed(seed)
-random.seed(seed)
-seed_torch(seed)
-env.seed(seed)
+
 
 # parameters
 num_frames = 20000
@@ -1138,4 +1139,4 @@ agent = DQNAgent(env, memory_size, batch_size, target_update)
 
 agent.train(num_frames,100000)
 with open('record.txt', 'a') as f:
-    f.write(' '.join(action_list) + '\n')
+    f.write('\n'.join(action_list))

@@ -128,7 +128,7 @@ class Player(pygame.sprite.Sprite):
             self.right = False
         if c[4] == "1":
             self.run = True
-        text += c+' '
+        #text += c+' '
 
     def pressbutton(self, event):
         # TODO replace with functions (port for AI)
@@ -376,7 +376,7 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
-                   (self.player.xpos - formerx + (1000 if self.player.finish and self.player.isalive else 0) - (1000 if not self.player.isalive else 0))/5000, self.player.finish, {}
+                   (self.player.xpos - formerx + (10 if self.player.finish and self.player.isalive else 0) - (10 if not self.player.isalive else 0))/50, self.player.finish, {}
         return returner
 
     def render(self):
@@ -980,12 +980,13 @@ class DQNAgent:
         """Train the agent."""
         self.is_test = False
         global seed
+        global text
         state = self.env.reset()
         update_cnt = 0
         losses = []
         scores = []
         score = 0
-        text += str(seed)+' '
+        #text += str(seed)+' '
         for frame_idx in range(1, num_frames + 1):
             action = self.select_action(state)
             next_state, reward, done = self.step(action)

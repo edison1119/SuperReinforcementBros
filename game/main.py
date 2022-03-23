@@ -128,7 +128,7 @@ class Player(pygame.sprite.Sprite):
             self.right = False
         if c[4] == "1":
             self.run = True
-        #text += c+' '
+        text += c+' '
 
     def pressbutton(self, event):
         # TODO replace with functions (port for AI)
@@ -214,9 +214,12 @@ class Player(pygame.sprite.Sprite):
 
             elif self.right and not self.wall and abs(rely + 0.001) <= r and abs(relx - r) < abs(self.xvel) + 0.01:
                 self.wall = True
+                self.xpos += self.rect.x-brick.rect.x+r
                 self.rect.x = brick.rect.x - r
+
             elif self.left and not self.wall and abs(rely + 0.001) <= r and abs(relx + r) < abs(self.xvel) + 0.01:
                 self.wall = True
+                self.xpos += self.rect.x-brick.rect.x-r
                 self.rect.x = brick.rect.x + r
         for spike in spikegroup:
             relx = spike.rect.x - self.rect.x
@@ -265,7 +268,6 @@ class Player(pygame.sprite.Sprite):
         self.wall = False
         if self.xpos > 2040 or not self.isalive:
             self.finish = True
-        print(self.rect.x, self.xpos)
 
 
 class Object(pygame.sprite.Sprite):
@@ -362,6 +364,7 @@ class CustomEnv(gym.Env):
         return re
 
     def step(self, action):
+        formery = self.player.rect.y
         formerx = self.player.xpos
         for brick in brickgroup:
             brick.update()
@@ -376,7 +379,7 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
-                   (self.player.xpos - formerx + (10 if self.player.finish and self.player.isalive else 0) - (10 if not self.player.isalive else 0))/50, self.player.finish, {}
+                   ((self.player.xpos - formerx)*5 - (5 if self.player.xpos == formerx and self.player.rect.y == formery else 0) + (100 if self.player.finish and self.player.isalive else 0) - (100 if not self.player.isalive else 0))/500, self.player.finish, {}
         return returner
 
     def render(self):
@@ -986,7 +989,7 @@ class DQNAgent:
         losses = []
         scores = []
         score = 0
-        #text += str(seed)+' '
+        text += str(seed)+' '
         for frame_idx in range(1, num_frames + 1):
             action = self.select_action(state)
             next_state, reward, done = self.step(action)
@@ -1137,7 +1140,7 @@ target_update = 100
 
 # train
 agent = DQNAgent(env, memory_size, batch_size, target_update)
-
+print()
 agent.train(num_frames,100000)
 with open('record.txt', 'a') as f:
     f.write('\n'.join(action_list))

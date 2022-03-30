@@ -342,7 +342,7 @@ class CustomEnv(gym.Env):
         self.spikegroup = pygame.sprite.Group()
         self.brickgroup = pygame.sprite.Group()
         self.player = Player()
-        self.action_space = spaces.Discrete(5)
+        self.action_space = spaces.Discrete(8)
         self.observation_space = spaces.Box(low=np.zeros((122,)), high=np.zeros((122,)), dtype=np.float64)
 
     def init_render(self):
@@ -379,7 +379,7 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
-                   ((self.player.xpos - formerx)*5 - (5 if self.player.xpos == formerx and self.player.rect.y == formery else 0) + (100 if self.player.finish and self.player.isalive else 0) - (100 if not self.player.isalive else 0))/500, self.player.finish, {}
+                   ((self.player.xpos - formerx)*5 - (20 if self.player.xpos == formerx and self.player.rect.y == formery else 0) + (100 if self.player.finish and self.player.isalive else 0) - (100 if not self.player.isalive else 0))/500, self.player.finish, {}
         return returner
 
     def render(self):
@@ -989,7 +989,7 @@ class DQNAgent:
         losses = []
         scores = []
         score = 0
-        text += str(seed)+' '
+        text += str(seed) + ' '
         for frame_idx in range(1, num_frames + 1):
             action = self.select_action(state)
             next_state, reward, done = self.step(action)
@@ -1008,6 +1008,12 @@ class DQNAgent:
                 state = self.env.reset()
                 scores.append(score)
                 score = 0
+                text += str(seed) + ' '
+                seed = random.randint(1, 1000)
+                np.random.seed(seed)
+                random.seed(seed)
+                seed_torch(seed)
+                env.seed(seed)
 
             # if training is ready
             if len(self.memory) >= self.batch_size:
@@ -1022,11 +1028,7 @@ class DQNAgent:
             # plotting
             if frame_idx % plotting_interval == 0:
                 self._plot(frame_idx, scores, losses)
-        seed = random.randint(1, 1000)
-        np.random.seed(seed)
-        random.seed(seed)
-        seed_torch(seed)
-        env.seed(seed)
+
         self.env.close()
 
     def test(self) -> List[np.ndarray]:
@@ -1133,7 +1135,7 @@ def seed_torch(seed):
 
 
 # parameters
-num_frames = 20000
+num_frames = 2000
 memory_size = 10000
 batch_size = 128
 target_update = 100
@@ -1141,6 +1143,6 @@ target_update = 100
 # train
 agent = DQNAgent(env, memory_size, batch_size, target_update)
 print()
-agent.train(num_frames,100000)
+agent.train(num_frames)
 with open('record.txt', 'a') as f:
     f.write('\n'.join(action_list))

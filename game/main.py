@@ -1,10 +1,8 @@
-import numpy
 import pygame
 from pygame.locals import *
 from gym import spaces
 
 import math
-import os
 import random
 from collections import deque
 from typing import Deque, Dict, List, Tuple
@@ -42,7 +40,7 @@ window_width, window_height = 1000, 600
 
 spikegroup = pygame.sprite.Group()
 brickgroup = pygame.sprite.Group()
-screen = pygame.display.set_mode((1000, 600))
+#screen = pygame.display.set_mode((1000, 600))
 
 action_list = []
 text = ''
@@ -264,7 +262,7 @@ class Player(pygame.sprite.Sprite):
         # print('yvel', self.yvel)
         self.rect.y = self.rect.y + self.yvel
         # blit
-        screen.blit(self.image, (self.rect.x, self.rect.y))
+        #screen.blit(self.image, (self.rect.x, self.rect.y))
         self.onplatform = False
         self.wall = False
         if self.xpos > 2040 or not self.isalive:
@@ -285,7 +283,8 @@ class Object(pygame.sprite.Sprite):
         self.player = Player()
 
     def update(self):
-        screen.blit(self.image, (self.rect.x, self.rect.y))
+        #screen.blit(self.image, (self.rect.x, self.rect.y))
+        pass
 
 
 class Brick(Object):
@@ -384,11 +383,13 @@ class CustomEnv(gym.Env):
 
     def render(self):
         self.rendering = True
-        screen.fill((0, 0, 0))
+        #screen.fill((0, 0, 0))
         if self.player.right:
-            screen.blit(keypic, (76, 38))
+            #screen.blit(keypic, (76, 38))
+            pass
         if self.player.left:
-            screen.blit(keypic, (0, 38))
+            #screen.blit(keypic, (0, 38))
+            pass
         brickgroup.update()
         spikegroup.update()
         if self.player.isalive:
@@ -1010,9 +1011,7 @@ class DQNAgent:
                 state = self.env.reset()
                 scores.append(score)
                 score = 0
-                file = open('record.txt', 'a')
-                file.write(text + '\n')
-                file.close()
+                action_list.append(text)
                 text = ''
                 seed = random.randint(1,999999)
                 text += str(seed) + ' '
@@ -1148,3 +1147,6 @@ target_update = 100
 agent = DQNAgent(env, memory_size, batch_size, target_update)
 print()
 agent.train(num_frames, 10000)
+
+with open('record.txt', 'w') as file:
+    file.write('\n'.join(action_list))

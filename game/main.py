@@ -1147,6 +1147,5 @@ target_update = 100
 agent = DQNAgent(env, memory_size, batch_size, target_update)
 print()
 agent.train(num_frames, 10000)
-
-with open('record.txt', 'w') as file:
-    file.write('\n'.join(action_list))
+file=open('record.txt','w')
+file.write('\n'.join(action_list))

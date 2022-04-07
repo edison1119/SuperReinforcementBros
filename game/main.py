@@ -1126,7 +1126,7 @@ class DQNAgent:
 
 
 
-seed = random.randint(1, 1000)
+seed = random.randint(1, 999999)
 env = CustomEnv()
 def seed_torch(seed):
     torch.manual_seed(seed)

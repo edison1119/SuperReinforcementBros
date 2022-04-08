@@ -376,8 +376,9 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
-                   ((self.player.xpos - formerx) - (40 if self.player.xpos == formerx and self.player.rect.y == formery else 0)
-                    + (2060 if self.player.finish and self.player.isalive else 0) - (2060-self.player.xpos if not self.player.isalive else 0)*2)/2060,\
+                   -1 if self.player.xpos == formerx and self.player.rect.y == formery else\
+                       ((self.player.xpos - formerx) + (2060 if self.player.finish and self.player.isalive else 0)
+                    - (2060-self.player.xpos if not self.player.isalive else 0)*2)/2060,\
                    self.player.finish, {}
         return returner
 

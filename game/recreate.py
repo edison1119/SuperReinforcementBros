@@ -305,7 +305,6 @@ def generate_stage():
 with open('record.txt') as f:
     contents = f.readlines()
 contents = list(filter(('\n').__ne__, contents))[0].split()
-print(contents)
 random.seed(int(contents[0]))
 
 spikegroup = pygame.sprite.Group()

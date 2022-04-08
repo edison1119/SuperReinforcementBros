@@ -303,14 +303,14 @@ class Spike(Object):
         super(Spike, self).update()
 
 
-spiking = True
+spiking = False
 
 
 def generate_stage():
     fill = set()
     brickgroup.empty()
     spikegroup.empty()
-    for x in range(random.randint(5, 30)):
+    for x in range(random.randint(1, 1)):#TODO 5~30 => 1
         a, b = random.randint(0, 26), random.randint(0, 3)
         i = 1
         d = 1
@@ -348,7 +348,6 @@ class CustomEnv(gym.Env):
         self.clock = pygame.time.Clock()
 
     def reset(self):
-        global text
         self.__init__()
         re = np.concatenate((
              np.array([self.player.rect.x, self.player.rect.y]),
@@ -357,7 +356,6 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             )
-        text = ''
         return re
 
     def step(self, action):
@@ -1004,18 +1002,16 @@ class DQNAgent:
             # PER: increase beta
             fraction = min(frame_idx / num_frames, 1.0)
             self.beta = self.beta + fraction * (1.0 - self.beta)
-
             # if episode ends
-            if done:
+            if done or frame_idx == num_frames:
                 global spikegroup
                 global brickgroup
                 state = self.env.reset()
                 scores.append(score)
                 score = 0
                 action_list.append(text)
-                text = ''
                 seed = random.randint(1,999999)
-                text += str(seed) + ' '
+                text = str(seed) + ' '
                 random.seed(seed)
                 spikegroup = pygame.sprite.Group()
                 brickgroup = pygame.sprite.Group()
@@ -1146,7 +1142,9 @@ target_update = 100
 
 # train
 agent = DQNAgent(env, memory_size, batch_size, target_update)
-print()
-agent.train(num_frames, 10000)
+agent.train(num_frames, 20000)
+
+print('\n'.join(action_list))
+
 file=open('record.txt','w')
-file.write('\n'.join(action_list))
+file.write('\n'.join(action_list)) #output side

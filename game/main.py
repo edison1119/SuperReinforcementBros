@@ -343,6 +343,7 @@ class CustomEnv(gym.Env):
         self.action_space = spaces.Discrete(8)
         self.observation_space = spaces.Box(low=np.zeros((122,)), high=np.zeros((122,)), dtype=np.float64)
         self.deltax = 0
+        self.deltay = 0
 
     def init_render(self):
         self.screen = pygame.display.set_mode((window_width, window_height))
@@ -369,6 +370,7 @@ class CustomEnv(gym.Env):
         if self.player.isalive:
             self.player.update(action)
         self.deltax = self.player.xpos - formerx
+        self.deltay = self.player.rect.y - formery
         returner = np.concatenate((
              np.array([self.player.rect.x, self.player.rect.y]),
              np.concatenate((np.concatenate([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
@@ -1008,7 +1010,7 @@ class DQNAgent:
             fraction = min(frame_idx / num_frames, 1.0)
             self.beta = self.beta + fraction * (1.0 - self.beta)
             # if episode ends
-            if done or self.trainframe % 10000 == 0 or self.env.deltax == 0:
+            if done or self.trainframe % 10000 == 0 or (self.env.deltax == 0 and self.env.deltay == 0 and action):
                 global spikegroup
                 global brickgroup
                 state = self.env.reset()

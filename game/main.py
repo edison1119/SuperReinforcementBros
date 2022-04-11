@@ -342,6 +342,7 @@ class CustomEnv(gym.Env):
         self.player = Player()
         self.action_space = spaces.Discrete(8)
         self.observation_space = spaces.Box(low=np.zeros((122,)), high=np.zeros((122,)), dtype=np.float64)
+        self.deltax = 0
 
     def init_render(self):
         self.screen = pygame.display.set_mode((window_width, window_height))
@@ -367,6 +368,7 @@ class CustomEnv(gym.Env):
             spike.update()
         if self.player.isalive:
             self.player.update(action)
+        self.deltax = self.player.xpos - formerx
         returner = np.concatenate((
              np.array([self.player.rect.x, self.player.rect.y]),
              np.concatenate((np.concatenate([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
@@ -375,7 +377,7 @@ class CustomEnv(gym.Env):
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
                    -1 if self.player.xpos == formerx and self.player.rect.y == formery else\
-                       ((self.player.xpos - formerx) + (2060 if self.player.finish and self.player.isalive else 0)
+                       ((self.deltax)*100 + (2060 if self.player.finish and self.player.isalive else 0)
                     - (2060-self.player.xpos if not self.player.isalive else 0)*2)/2060,\
                    self.player.finish, {}
         return returner
@@ -904,6 +906,8 @@ class DQNAgent:
         # mode: train / test
         self.is_test = False
 
+        self.trainframe = 0
+
     def select_action(self, state: np.ndarray) -> np.ndarray:
         """Select an action from the input state."""
         # NoisyNet: no epsilon greedy action selection
@@ -996,6 +1000,7 @@ class DQNAgent:
 
             state = next_state
             score += reward
+            self.trainframe += 1
 
             # NoisyNet: removed decrease of epsilon
 
@@ -1003,7 +1008,7 @@ class DQNAgent:
             fraction = min(frame_idx / num_frames, 1.0)
             self.beta = self.beta + fraction * (1.0 - self.beta)
             # if episode ends
-            if done or frame_idx == num_frames:
+            if done or self.trainframe % 10000 == 0 or self.env.deltax == 0:
                 global spikegroup
                 global brickgroup
                 state = self.env.reset()
@@ -1015,6 +1020,7 @@ class DQNAgent:
                 random.seed(seed)
                 spikegroup = pygame.sprite.Group()
                 brickgroup = pygame.sprite.Group()
+                self.trainframe = 0
             # if training is ready
             if len(self.memory) >= self.batch_size:
                 loss = self.update_model()

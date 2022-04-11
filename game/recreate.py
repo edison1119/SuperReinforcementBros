@@ -304,35 +304,38 @@ def generate_stage():
 
 with open('record.txt') as f:
     contents = f.readlines()
-contents = list(filter(('\n').__ne__, contents))[0].split()
-random.seed(int(contents[0]))
+contents = list(filter(('\n').__ne__, contents))
 
-spikegroup = pygame.sprite.Group()
-brickgroup = pygame.sprite.Group()
-brick = Brick(400, 400, brickpic)
-spike = Spike(400, 400, spikepic)
-brickgroup.add(brick)
-player = Player()
+
 run = True
 Clock = pygame.time.Clock()
-n = 1
-while run and n < len(contents):
-    Clock.tick(framerate)
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            running = False
-            pygame.quit()
-            exit()
-    screen.fill((0, 0, 0))
-    if player.right:
-        screen.blit(keypic, (76, 38))
-    if player.left:
-        screen.blit(keypic, (0, 38))
-    brickgroup.update()
-    spikegroup.update()
-    if player.isalive:
-        player.update(contents[n])
-    pygame.display.update()
-    n += 1
+for x in contents:
+    x = x.split()
+    random.seed(int(x[0]))
+    spikegroup = pygame.sprite.Group()
+    brickgroup = pygame.sprite.Group()
+    brick = Brick(400, 400, brickpic)
+    spike = Spike(400, 400, spikepic)
+    brickgroup.add(brick)
+    player = Player()
+    n = 1
+    while run and n < len(x):
+        Clock.tick(framerate)
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                running = False
+                pygame.quit()
+                exit()
+        screen.fill((0, 0, 0))
+        if player.right:
+            screen.blit(keypic, (76, 38))
+        if player.left:
+            screen.blit(keypic, (0, 38))
+        brickgroup.update()
+        spikegroup.update()
+        if player.isalive:
+            player.update(x[n])
+        pygame.display.update()
+        n += 1
 
 

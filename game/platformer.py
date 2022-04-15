@@ -325,6 +325,7 @@ while run:
         screen.blit(keypic, (76, 38))
     if player.left:
         screen.blit(keypic, (0, 38))
+    print(player.rect.x, player.rect.y)
     brickgroup.update()
     spikegroup.update()
     if player.isalive:

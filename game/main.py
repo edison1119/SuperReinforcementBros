@@ -1,10 +1,8 @@
-import numpy
 import pygame
 from pygame.locals import *
 from gym import spaces
 
 import math
-import os
 import random
 from collections import deque
 from typing import Deque, Dict, List, Tuple
@@ -42,10 +40,10 @@ window_width, window_height = 1000, 600
 
 spikegroup = pygame.sprite.Group()
 brickgroup = pygame.sprite.Group()
-screen = pygame.display.set_mode((1000, 600))
+#screen = pygame.display.set_mode((1000, 600))
 
 action_list = []
-
+text = ''
 
 # classes
 class Player(pygame.sprite.Sprite):
@@ -57,9 +55,9 @@ class Player(pygame.sprite.Sprite):
 
         # initial value & rect
         self.rect = self.image.get_rect()
-        self.rect.x = 50
+        self.rect.x = 0
         self.rect.y = 150
-        self.xpos = 50
+        self.xpos = 0
         self.xvel = 0
         self.yvel = 0
         self.g = r * 67.82 / framerate ** 2
@@ -83,6 +81,7 @@ class Player(pygame.sprite.Sprite):
         self.isalive = True
 
     def nextframe(self, c):
+        global text
         """
         (old solution)
         0: No movement
@@ -126,6 +125,7 @@ class Player(pygame.sprite.Sprite):
             self.right = False
         if c[4] == "1":
             self.run = True
+        text += c+' '
 
     def pressbutton(self, event):
         # TODO replace with functions (port for AI)
@@ -157,7 +157,7 @@ class Player(pygame.sprite.Sprite):
 
     def update(self, action):
         global next_stage
-        # self.nextframe(f'{action:05b}')
+        self.nextframe(f'{action:05b}')
         # movement
         # print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
         if not self.right and not self.left:
@@ -211,15 +211,19 @@ class Player(pygame.sprite.Sprite):
 
             elif self.right and not self.wall and abs(rely + 0.001) <= r and abs(relx - r) < abs(self.xvel) + 0.01:
                 self.wall = True
+                self.xpos += self.rect.x-brick.rect.x+r
                 self.rect.x = brick.rect.x - r
+
             elif self.left and not self.wall and abs(rely + 0.001) <= r and abs(relx + r) < abs(self.xvel) + 0.01:
                 self.wall = True
+                self.xpos += self.rect.x-brick.rect.x-r
                 self.rect.x = brick.rect.x + r
         for spike in spikegroup:
             relx = spike.rect.x - self.rect.x
             rely = spike.rect.y - self.rect.y
             if abs(rely) < r - 1 and abs(relx) < r - 1:
                 self.isalive = False
+                break
         # for brick in brickgroup:
         #    if self.onplatform== False and self.ground == False and self.yvel > 0 and abs(brick.rect.y -self.rect.y-r)
         #                                                          <=self.yvel and abs(brick.rect.x - self.rect.x)<= r :
@@ -248,7 +252,8 @@ class Player(pygame.sprite.Sprite):
             self.rect.x = -20
             generate_stage()
         elif self.rect.x < -20:
-            self.rect.x = 1020
+            self.wall=True
+            self.xpos += -self.rect.x-20
         # xvel process
         if not self.wall:
             self.rect.x = self.rect.x + self.xvel
@@ -257,12 +262,11 @@ class Player(pygame.sprite.Sprite):
         # print('yvel', self.yvel)
         self.rect.y = self.rect.y + self.yvel
         # blit
-        screen.blit(self.image, (self.rect.x, self.rect.y))
+        #screen.blit(self.image, (self.rect.x, self.rect.y))
         self.onplatform = False
         self.wall = False
         if self.xpos > 2040 or not self.isalive:
             self.finish = True
-        print(self.rect.x, self.xpos)
 
 
 class Object(pygame.sprite.Sprite):
@@ -279,7 +283,8 @@ class Object(pygame.sprite.Sprite):
         self.player = Player()
 
     def update(self):
-        screen.blit(self.image, (self.rect.x, self.rect.y))
+        #screen.blit(self.image, (self.rect.x, self.rect.y))
+        pass
 
 
 class Brick(Object):
@@ -298,14 +303,14 @@ class Spike(Object):
         super(Spike, self).update()
 
 
-spiking = True
+spiking = False
 
 
 def generate_stage():
     fill = set()
     brickgroup.empty()
     spikegroup.empty()
-    for x in range(random.randint(5, 30)):
+    for x in range(random.randint(1, 1)):#TODO 5~30 => 1
         a, b = random.randint(0, 26), random.randint(0, 3)
         i = 1
         d = 1
@@ -334,11 +339,11 @@ class CustomEnv(gym.Env):
         # self.observation_space = gym.spaces.Box()
         # self.action_space = gym.spaces.Box()
         pygame.init()
-        self.spikegroup = pygame.sprite.Group()
-        self.brickgroup = pygame.sprite.Group()
         self.player = Player()
-        self.action_space = spaces.Discrete(5)
+        self.action_space = spaces.Discrete(8)
         self.observation_space = spaces.Box(low=np.zeros((122,)), high=np.zeros((122,)), dtype=np.float64)
+        self.deltax = 0
+        self.deltay = 0
 
     def init_render(self):
         self.screen = pygame.display.set_mode((window_width, window_height))
@@ -353,10 +358,10 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             )
-        print(re.shape)
         return re
 
     def step(self, action):
+        formery = self.player.rect.y
         formerx = self.player.xpos
         for brick in brickgroup:
             brick.update()
@@ -364,6 +369,8 @@ class CustomEnv(gym.Env):
             spike.update()
         if self.player.isalive:
             self.player.update(action)
+        self.deltax = self.player.xpos - formerx
+        self.deltay = self.player.rect.y - formery
         returner = np.concatenate((
              np.array([self.player.rect.x, self.player.rect.y]),
              np.concatenate((np.concatenate([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
@@ -371,16 +378,21 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
-            self.player.xpos - formerx + (1000 if self.player.finish and self.player.isalive else 0) - (1000 if not self.player.isalive else 0), self.player.finish, {}
+                   -1 if self.player.xpos == formerx and self.player.rect.y == formery else\
+                       ((self.deltax)*100 + (2060 if self.player.finish and self.player.isalive else 0)
+                    - (1000 if not self.player.isalive else 0))/2060,\
+                   self.player.finish, {}
         return returner
 
     def render(self):
         self.rendering = True
-        screen.fill((0, 0, 0))
+        #screen.fill((0, 0, 0))
         if self.player.right:
-            screen.blit(keypic, (76, 38))
+            #screen.blit(keypic, (76, 38))
+            pass
         if self.player.left:
-            screen.blit(keypic, (0, 38))
+            #screen.blit(keypic, (0, 38))
+            pass
         brickgroup.update()
         spikegroup.update()
         if self.player.isalive:
@@ -389,8 +401,8 @@ class CustomEnv(gym.Env):
 
     def generate_stage(self):
         fill = set()
-        self.brickgroup.empty()
-        self.spikegroup.empty()
+        brickgroup.empty()
+        spikegroup.empty()
         for x in range(random.randint(5, 30)):
             a, b = random.randint(0, 26), random.randint(0, 3)
             i = 1
@@ -401,7 +413,7 @@ class CustomEnv(gym.Env):
                 d = -d
             fill.add(str(a).zfill(2) + str(b))
         for i in fill:
-            self.brickgroup.add(Brick(int(i[:2]) * 38 + 19, 500 - int(i[2:]) * 39, brickpic))
+            brickgroup.add(Brick(int(i[:2]) * 38 + 19, 500 - int(i[2:]) * 39, brickpic))
         if spiking:
             for x in range(random.randint(2, 10)):
                 a = random.randint(2, 24)
@@ -412,7 +424,7 @@ class CustomEnv(gym.Env):
                     i += 1
                     d = -d
                 fill.add(str(a).zfill(2) + "0")
-                self.spikegroup.add(Spike(a * 38 + 19, 500, spikepic))  # 526 = 13*39+19
+                spikegroup.add(Spike(a * 38 + 19, 500, spikepic))  # 526 = 13*39+19
 
 
 ###################################################################################################
@@ -460,7 +472,6 @@ class ReplayBuffer:
             self.n_step_buffer, self.gamma
         )
         obs, act = self.n_step_buffer[0][:2]
-        print(obs.shape, self.obs_buf.shape)
         self.obs_buf[self.ptr] = obs
         self.next_obs_buf[self.ptr] = next_obs
         self.acts_buf[self.ptr] = act
@@ -897,6 +908,8 @@ class DQNAgent:
         # mode: train / test
         self.is_test = False
 
+        self.trainframe = 0
+
     def select_action(self, state: np.ndarray) -> np.ndarray:
         """Select an action from the input state."""
         # NoisyNet: no epsilon greedy action selection
@@ -975,33 +988,41 @@ class DQNAgent:
     def train(self, num_frames: int, plotting_interval: int = 200):
         """Train the agent."""
         self.is_test = False
-
+        global seed
+        global text
         state = self.env.reset()
         update_cnt = 0
         losses = []
         scores = []
         score = 0
-        clock = pygame.time.Clock()
+        text += str(seed) + ' '
         for frame_idx in range(1, num_frames + 1):
-            clock.tick(30)
             action = self.select_action(state)
             next_state, reward, done = self.step(action)
 
             state = next_state
             score += reward
+            self.trainframe += 1
 
             # NoisyNet: removed decrease of epsilon
 
             # PER: increase beta
             fraction = min(frame_idx / num_frames, 1.0)
             self.beta = self.beta + fraction * (1.0 - self.beta)
-
             # if episode ends
-            if done:
+            if done or self.trainframe % 10000 == 0 or (self.env.deltax == 0 and self.env.deltay == 0 and action):
+                global spikegroup
+                global brickgroup
                 state = self.env.reset()
                 scores.append(score)
                 score = 0
-
+                action_list.append(text)
+                seed = random.randint(1,999999)
+                text = str(seed) + ' '
+                random.seed(seed)
+                spikegroup = pygame.sprite.Group()
+                brickgroup = pygame.sprite.Group()
+                self.trainframe = 0
             # if training is ready
             if len(self.memory) >= self.batch_size:
                 loss = self.update_model()
@@ -1112,11 +1133,10 @@ class DQNAgent:
         plt.show()
 
 
+
+
+seed = random.randint(1, 999999)
 env = CustomEnv()
-
-seed = 777
-
-
 def seed_torch(seed):
     torch.manual_seed(seed)
     if torch.backends.cudnn.enabled:
@@ -1124,10 +1144,7 @@ def seed_torch(seed):
         torch.backends.cudnn.deterministic = True
 
 
-np.random.seed(seed)
-random.seed(seed)
-seed_torch(seed)
-env.seed(seed)
+
 
 # parameters
 num_frames = 20000
@@ -1137,5 +1154,9 @@ target_update = 100
 
 # train
 agent = DQNAgent(env, memory_size, batch_size, target_update)
+agent.train(num_frames, num_frames)
 
-agent.train(num_frames,100000)
+print('\n'.join(action_list))
+
+file=open('record.txt','w')
+file.write('\n'.join(action_list)) #output side

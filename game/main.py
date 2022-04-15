@@ -254,6 +254,7 @@ class Player(pygame.sprite.Sprite):
         elif self.rect.x < -20:
             self.wall=True
             self.xpos += -self.rect.x-20
+            self.rect.x = -20
         # xvel process
         if not self.wall:
             self.rect.x = self.rect.x + self.xvel

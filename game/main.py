@@ -380,7 +380,7 @@ class CustomEnv(gym.Env):
             ), \
                    -1 if self.player.xpos == formerx and self.player.rect.y == formery else\
                        ((self.deltax)*100 + (2060 if self.player.finish and self.player.isalive else 0)
-                    - (2060-self.player.xpos if not self.player.isalive else 0)*2)/2060,\
+                    - (1000 if not self.player.isalive else 0))/2060,\
                    self.player.finish, {}
         return returner
 
@@ -1150,7 +1150,7 @@ target_update = 100
 
 # train
 agent = DQNAgent(env, memory_size, batch_size, target_update)
-agent.train(num_frames, 20000)
+agent.train(num_frames, num_frames)
 
 print('\n'.join(action_list))
 

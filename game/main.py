@@ -344,6 +344,7 @@ class CustomEnv(gym.Env):
         self.observation_space = spaces.Box(low=np.zeros((122,)), high=np.zeros((122,)), dtype=np.float64)
         self.deltax = 0
         self.deltay = 0
+        self.frame = 0
 
     def init_render(self):
         self.screen = pygame.display.set_mode((window_width, window_height))
@@ -363,6 +364,7 @@ class CustomEnv(gym.Env):
     def step(self, action):
         formery = self.player.rect.y
         formerx = self.player.xpos
+        self.frame += 1
         for brick in brickgroup:
             brick.update()
         for spike in spikegroup:
@@ -378,9 +380,9 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
-                   -1 if self.player.xpos == formerx and self.player.rect.y == formery else\
+                   (-1 if self.player.xpos == formerx and self.player.rect.y == formery else\
                        ((self.deltax)*100 + (2060 if self.player.finish and self.player.isalive else 0)
-                    - (1000 if not self.player.isalive else 0))/2060,\
+                    - (1000 if not self.player.isalive else 0))/2060)+(self.xpos-2*self.frame),\
                    self.player.finish, {}
         return returner
 

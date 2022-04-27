@@ -381,8 +381,8 @@ class CustomEnv(gym.Env):
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
                    (-1 if self.player.xpos == formerx and self.player.rect.y == formery else\
-                       ((self.deltax)*100 + (2060 if self.player.finish and self.player.isalive else 0)
-                    - (1000 if not self.player.isalive else 0))/2060)+(self.xpos-2*self.frame),\
+                       (2 if self.player.finish and self.player.isalive else 0)
+                    - (5 if not self.player.isalive else 0))+(self.player.xpos-2*self.frame)/50,\
                    self.player.finish, {}
         return returner
 
@@ -1063,7 +1063,7 @@ class DQNAgent:
         return frames
 
     def _compute_dqn_loss(self, samples: Dict[str, np.ndarray], gamma: float) -> torch.Tensor:
-        """Return categorical dqn loss."""  
+        """Return categorical dqn loss."""
         device = self.device  # for shortening the following lines
         state = torch.FloatTensor(samples["obs"]).to(device)
         next_state = torch.FloatTensor(samples["next_obs"]).to(device)
@@ -1129,6 +1129,8 @@ class DQNAgent:
         plt.title('loss')
         plt.plot(losses)
         plt.show()
+        plt.savefig('f.png')
+        plt.close()
 
 
 
@@ -1145,7 +1147,7 @@ def seed_torch(seed):
 
 
 # parameters
-num_frames = 20000
+num_frames = 200000
 memory_size = 10000
 batch_size = 128
 target_update = 100
@@ -1153,8 +1155,6 @@ target_update = 100
 # train
 agent = DQNAgent(env, memory_size, batch_size, target_update)
 agent.train(num_frames, num_frames)
-
-print('\n'.join(action_list))
 
 file=open('record.txt','w')
 file.write('\n'.join(action_list)) #output side

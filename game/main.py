@@ -26,7 +26,7 @@ brickpic = pygame.image.load('brick.bmp')
 bluepic = pygame.image.load('Blue.bmp')
 keypic = pygame.image.load('whitesquare.bmp')
 spikepic = pygame.image.load('spike.bmp')
-
+print()
 r = 38
 brickpic = pygame.transform.scale(brickpic, (r, r))
 bluepic = pygame.transform.scale(bluepic, (r, r))
@@ -341,7 +341,7 @@ class CustomEnv(gym.Env):
         # self.action_space = gym.spaces.Box()
         pygame.init()
         self.player = Player()
-        self.action_space = spaces.Discrete(8)
+        self.action_space = spaces.Discrete(32)
         self.observation_space = spaces.Box(low=np.zeros((122,)), high=np.zeros((122,)), dtype=np.float64)
         self.deltax = 0
         self.deltay = 0

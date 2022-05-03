@@ -26,7 +26,6 @@ brickpic = pygame.image.load('brick.bmp')
 bluepic = pygame.image.load('Blue.bmp')
 keypic = pygame.image.load('whitesquare.bmp')
 spikepic = pygame.image.load('spike.bmp')
-print()
 r = 38
 brickpic = pygame.transform.scale(brickpic, (r, r))
 bluepic = pygame.transform.scale(bluepic, (r, r))
@@ -1013,7 +1012,7 @@ class DQNAgent:
             fraction = min(frame_idx / num_frames, 1.0)
             self.beta = self.beta + fraction * (1.0 - self.beta)
             # if episode ends
-            if done or self.trainframe % 10000 == 0 or (self.env.deltax == 0 and self.env.deltay == 0 and action):
+            if done or self.trainframe == 1000:#or (self.env.deltax == 0 and self.env.deltay == 0 and action):
                 global spikegroup
                 global brickgroup
                 state = self.env.reset()
@@ -1079,8 +1078,8 @@ class DQNAgent:
             # Double DQN
             next_action = self.dqn(next_state).argmax(1)
             next_dist = self.dqn_target.dist(next_state)
-            print("next action:", next_action.shape)  # torch.Size([11520])
-            print(next_dist.shape)  # torch.Size([11520, 5, 51])
+            #print("next action:", next_action.shape)  # torch.Size([11520])
+            #print(next_dist.shape)  # torch.Size([11520, 5, 51])
             # TODO Fix this
             #  IndexError: shape mismatch: indexing tensors could not be broadcast together with shapes [128], [11520]
             next_dist = next_dist[range(self.batch_size), next_action]

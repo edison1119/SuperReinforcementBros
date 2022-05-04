@@ -43,7 +43,7 @@ brickgroup = pygame.sprite.Group()
 
 action_list = []
 text = ''
-
+seed_record = open('seed.txt','a')
 # classes
 class Player(pygame.sprite.Sprite):
 
@@ -308,9 +308,11 @@ spiking = False
 
 def generate_stage():
     fill = set()
+    filling = True
     brickgroup.empty()
     spikegroup.empty()
-    for x in range(random.randint(1, 1)):#TODO 5~30 => 1
+    l = 0
+    for x in range(random.randint(5, 30)):#TODO 5~30 => 1(not activate)
         a, b = random.randint(0, 26), random.randint(0, 3)
         i = 1
         d = 1
@@ -318,7 +320,14 @@ def generate_stage():
             a += i * d
             i += 1
             d = -d
-        fill.add(str(a).zfill(2) + str(b))
+            if a < 0 or a > 26:
+                filling = False
+                break
+        if filling:
+            fill.add(str(a).zfill(2) + str(b))
+        filling = True
+    l = len(fill)
+        #TODO
     for i in fill:
         brickgroup.add(Brick(int(i[:2]) * 38 + 19, 500 - int(i[2:]) * 39, brickpic))
     if spiking:
@@ -330,10 +339,15 @@ def generate_stage():
                 a += i * d
                 i += 1
                 d = -d
-            fill.add(str(a).zfill(2) + "0")
-            spikegroup.add(Spike(a * 38 + 19, 500, spikepic))  # 526 = 13*39+19
-
-
+                if a < 0 or a > 26:
+                    filling = False
+                    break
+            if filling:
+                fill.add(str(a).zfill(2) + "0")
+                spikegroup.add(Spike(a * 38 + 19, 500, spikepic))  # 526 = 13*39+19
+            filling = True
+    print(l,fill)
+    seed_record.write(str(l)+" "+"".join(fill))
 class CustomEnv(gym.Env):
     def __init__(self, env_config={}):
         # self.observation_space = gym.spaces.Box()

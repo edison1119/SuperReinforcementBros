@@ -43,7 +43,7 @@ brickgroup = pygame.sprite.Group()
 
 action_list = []
 text = ''
-seed_record = open('seed.txt','a')
+seed_record = ""
 # classes
 class Player(pygame.sprite.Sprite):
 
@@ -347,7 +347,7 @@ def generate_stage():
                 spikegroup.add(Spike(a * 38 + 19, 500, spikepic))  # 526 = 13*39+19
             filling = True
     print(l,fill)
-    seed_record.write(str(l)+" "+"".join(fill)+'f')
+    seed_record+=(str(l)+" "+"".join(fill)+'f')
 class CustomEnv(gym.Env):
     def __init__(self, env_config={}):
         # self.observation_space = gym.spaces.Box()
@@ -417,6 +417,32 @@ class CustomEnv(gym.Env):
 
     def generate_stage(self):
         generate_stage()
+        # fill = set()
+        # brickgroup.empty()
+        # spikegroup.empty()
+        # for x in range(random.randint(5, 30)):
+        #     a, b = random.randint(0, 26), random.randint(0, 3)
+        #     i = 1
+        #     d = 1
+        #     while str(a).zfill(2) + str(b) in fill:
+        #         a += i * d
+        #         i += 1
+        #         d = -d
+        #     fill.add(str(a).zfill(2) + str(b))
+        # for i in fill:
+        #     brickgroup.add(Brick(int(i[:2]) * 38 + 19, 500 - int(i[2:]) * 39, brickpic))
+        # if spiking:
+        #     for x in range(random.randint(2, 10)):
+        #         a = random.randint(2, 24)
+        #         i = 1
+        #         d = 1
+        #         while str(a).zfill(2) + "0" in fill:
+        #             a += i * d
+        #             i += 1
+        #             d = -d
+        #         fill.add(str(a).zfill(2) + "0")
+        #         spikegroup.add(Spike(a * 38 + 19, 500, spikepic))  # 526 = 13*39+19
+
 
 ###################################################################################################
 class ReplayBuffer:
@@ -979,7 +1005,7 @@ class DQNAgent:
     def train(self, num_frames: int, plotting_interval: int = 200):
         """Train the agent."""
         self.is_test = False
-        global seed
+        global seed, seed_record
         global text
         state = self.env.reset()
         update_cnt = 0
@@ -1010,6 +1036,7 @@ class DQNAgent:
                 action_list.append(text)
                 seed = random.randint(1,999999)
                 text = str(seed) + ' '
+                seed_record+='\n'
                 random.seed(seed)
                 spikegroup = pygame.sprite.Group()
                 brickgroup = pygame.sprite.Group()
@@ -1146,7 +1173,7 @@ target_update = 100
 
 # train
 agent = DQNAgent(env, memory_size, batch_size, target_update)
-agent.train(num_frames, num_frames)
+agent.train(num_frames, num_frames/100)#TODO parameter splited into 100 plotting segment
 
 file=open('record.txt','w')
 file.write('\n'.join(action_list)) #output side

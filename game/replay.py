@@ -227,7 +227,8 @@ class Player(pygame.sprite.Sprite):
             self.rect.x = -20
             generate_stage()
         elif self.rect.x < -20:
-            self.rect.x = 1020
+            self.wall=True
+            self.rect.x = -20
         # xvel process
         if not self.wall:
             self.rect.x = self.rect.x + self.xvel

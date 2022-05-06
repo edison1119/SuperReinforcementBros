@@ -1177,3 +1177,5 @@ agent.train(num_frames, num_frames/100)#TODO parameter splited into 100 plotting
 
 file=open('record.txt','w')
 file.write('\n'.join(action_list)) #output side
+seed_file=open('record.txt')
+seed_file.write(seed_record)

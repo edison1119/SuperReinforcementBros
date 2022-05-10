@@ -61,6 +61,8 @@ class Player(pygame.sprite.Sprite):
         # player state
         self.isalive = True
 
+        generate_stage()
+
     def nextframe(self, c):
         """
         (old solution)

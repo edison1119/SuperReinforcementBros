@@ -307,6 +307,7 @@ spiking = False
 
 
 def generate_stage():
+    global seed_record
     fill = set()
     filling = True
     brickgroup.empty()
@@ -628,6 +629,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         assert len(indices) == len(priorities)
 
         for idx, priority in zip(indices, priorities):
+            print(priority)
             assert priority > 0
             assert 0 <= idx < len(self)
 
@@ -1173,7 +1175,7 @@ target_update = 100
 
 # train
 agent = DQNAgent(env, memory_size, batch_size, target_update)
-agent.train(num_frames, num_frames/100)#TODO parameter splited into 100 plotting segment
+agent.train(num_frames, num_frames)#TODO parameter splited into 100 plotting segment
 
 file=open('record.txt','w')
 file.write('\n'.join(action_list)) #output side

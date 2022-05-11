@@ -83,8 +83,6 @@ class Player(pygame.sprite.Sprite):
 
         # player state
         self.isalive = True
-        generate_stage()
-
     def nextframe(self, c):
         global text
         """
@@ -402,7 +400,7 @@ class CustomEnv(gym.Env):
             ), \
                    (-1 if self.player.xpos == formerx and self.player.rect.y == formery else\
                        (2 if self.player.finish and self.player.isalive else 0)
-                    - (5 if not self.player.isalive else 0))+(self.player.xpos-5*self.frame)/50,\
+                    - (5 if not self.player.isalive else 0))+(self.player.xpos-2*self.frame)/50,\
                    self.player.finish, {}
         return returner
 
@@ -421,8 +419,8 @@ class CustomEnv(gym.Env):
             self.player.update()
         pygame.display.update()
 
-    def generate_stage(self):
-        generate_stage()
+    #def generate_stage(self):
+        #generate_stage()
         # fill = set()
         # brickgroup.empty()
         # spikegroup.empty()
@@ -634,9 +632,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         assert len(indices) == len(priorities)
 
         for idx, priority in zip(indices, priorities):
-            if not priority > 0:
-                os.system('python main.py')
-                #os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
+            assert priority > 0
             assert 0 <= idx < len(self)
 
             self.sum_tree[idx] = priority ** self.alpha

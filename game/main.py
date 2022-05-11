@@ -632,7 +632,6 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         assert len(indices) == len(priorities)
 
         for idx, priority in zip(indices, priorities):
-            print(priority)
             assert priority > 0
             assert 0 <= idx < len(self)
 
@@ -997,7 +996,7 @@ class DQNAgent:
         self.optimizer.step()
 
         # PER: update priorities
-        loss_for_prior = elementwise_loss.detach().cpu().numpy()
+        loss_for_prior = torch.nan_to_num(elementwise_loss.detach().cpu()).numpy()
         new_priorities = loss_for_prior + self.prior_eps
         self.memory.update_priorities(indices, new_priorities)
 

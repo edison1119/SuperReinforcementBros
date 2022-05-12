@@ -1000,7 +1000,7 @@ class DQNAgent:
             loss_for_prior = torch.nan_to_num(elementwise_loss.detach().cpu()).numpy()
             self.first_train = False
         else:
-            loss_for_prior = elementwise_loss.detach().cpu().numpy()    
+            loss_for_prior = elementwise_loss.detach().cpu().numpy()
         new_priorities = loss_for_prior + self.prior_eps
         self.memory.update_priorities(indices, new_priorities)
 

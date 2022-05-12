@@ -928,7 +928,7 @@ class DQNAgent:
 
         # mode: train / test
         self.is_test = False
-
+        self.first_train = True
         self.trainframe = 0
 
     def select_action(self, state: np.ndarray) -> np.ndarray:
@@ -996,7 +996,11 @@ class DQNAgent:
         self.optimizer.step()
 
         # PER: update priorities
-        loss_for_prior = torch.nan_to_num(elementwise_loss.detach().cpu()).numpy()
+        if self.first_train:
+            loss_for_prior = torch.nan_to_num(elementwise_loss.detach().cpu()).numpy()
+            self.first_train = False
+        else:
+            loss_for_prior = elementwise_loss.detach().cpu().numpy()    
         new_priorities = loss_for_prior + self.prior_eps
         self.memory.update_priorities(indices, new_priorities)
 

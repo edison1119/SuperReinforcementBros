@@ -84,6 +84,7 @@ class Player(pygame.sprite.Sprite):
         fourth : right
         fifth  : sprint (fireball)
         """
+        print(c)
         if isinstance(c, int):
             c = str(c)
         if c[0] == "1":

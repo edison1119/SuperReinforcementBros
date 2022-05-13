@@ -106,6 +106,7 @@ class Player(pygame.sprite.Sprite):
         fourth : right
         fifth  : sprint (fireball)
         """
+        print(c)
         if isinstance(c, int):
             c = str(c)
         if c[0] == "1":
@@ -995,12 +996,9 @@ class DQNAgent:
         clip_grad_norm_(self.dqn.parameters(), 10.0)
         self.optimizer.step()
 
-        # PER: update priorities
-        if self.first_train:
-            loss_for_prior = torch.nan_to_num(elementwise_loss.detach().cpu()).numpy()
-            self.first_train = False
-        else:
-            loss_for_prior = elementwise_loss.detach().cpu().numpy()
+        # PER: update priorities #TODO fix this madness of nan
+        loss_for_prior = torch.nan_to_num(elementwise_loss.detach().cpu()).numpy()
+        #loss_for_prior = elementwise_loss.detach().cpu().numpy()
         new_priorities = loss_for_prior + self.prior_eps
         self.memory.update_priorities(indices, new_priorities)
 

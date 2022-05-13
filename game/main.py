@@ -106,7 +106,7 @@ class Player(pygame.sprite.Sprite):
         fourth : right
         fifth  : sprint (fireball)
         """
-        print(c)
+        print(c,self.xpos)
         if isinstance(c, int):
             c = str(c)
         if c[0] == "1":
@@ -317,8 +317,8 @@ def generate_stage():
     brickgroup.empty()
     spikegroup.empty()
     l = 0
-    for x in range(random.randint(5, 30)):#TODO 5~30 => 1(not activate)
-        a, b = random.randint(0, 26), random.randint(0, 3)
+    for x in range(random.randint(2, 10)):#TODO 5~30 => 1(not activate)
+        a, b = random.randint(5, 26), random.randint(0, 3)
         i = 1
         d = 1
         while str(a).zfill(2) + str(b) in fill:
@@ -336,8 +336,8 @@ def generate_stage():
     for i in fill:
         brickgroup.add(Brick(int(i[:2]) * 38 + 19, 500 - int(i[2:]) * 39, brickpic))
     if spiking:
-        for x in range(random.randint(2, 10)):
-            a = random.randint(2, 24)
+        for x in range(random.randint(2, 5)): #TODO 2~10=>2~5
+            a = random.randint(6, 24)
             i = 1
             d = 1
             while str(a).zfill(2) + "0" in fill:
@@ -364,10 +364,10 @@ class CustomEnv(gym.Env):
         self.deltax = 0
         self.deltay = 0
         self.frame = 0
-
+        self.expectxpos=0
     def init_render(self):
         self.screen = pygame.display.set_mode((window_width, window_height))
-        self.clock = pygame.time.Clock()
+        #self.clock = pygame.time.Clock()
 
     def reset(self):
         self.__init__()
@@ -392,6 +392,13 @@ class CustomEnv(gym.Env):
             self.player.update(action)
         self.deltax = self.player.xpos - formerx
         self.deltay = self.player.rect.y - formery
+        if self.player.xpos<self.expectxpos:
+            self.expectreward= (self.player.xpos-self.expectxpos)/200
+            self.expectxpos+=2
+        else:
+            self.expectreward= (self.player.xpos-self.expectxpos)/100
+            self.expectxpos+=2.5
+        print('Push:',self.expectreward)
         returner = np.concatenate((
              np.array([self.player.rect.x, self.player.rect.y]),
              np.concatenate((np.concatenate([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
@@ -399,10 +406,13 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
-                   (-1 if self.player.xpos == formerx and self.player.rect.y == formery else\
-                       (2 if self.player.finish and self.player.isalive else 0)
-                    - (5 if not self.player.isalive else 0))+(self.player.xpos-2*self.frame)/50,\
+                   (-1.5 if self.player.xpos == formerx and self.player.rect.y == formery else \
+                    ((2 if self.player.finish and self.player.isalive else 0)
+                    - (2 if not self.player.isalive else 0))+1)+self.expectreward,\
                    self.player.finish, {}
+        print(returner[-3])
+        if self.player.xpos == formerx and self.player.rect.y == formery:
+            print('a')
         return returner
 
     def render(self):

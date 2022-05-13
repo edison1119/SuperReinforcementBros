@@ -59,9 +59,9 @@ class Player(pygame.sprite.Sprite):
 
         # initial value & rect
         self.rect = self.image.get_rect()
-        self.rect.x = 0
+        self.rect.x = 40
         self.rect.y = 150
-        self.xpos = 0
+        self.xpos = 30
         self.xvel = 0
         self.yvel = 0
         self.g = r * 67.82 / framerate ** 2
@@ -82,7 +82,7 @@ class Player(pygame.sprite.Sprite):
         self.finish = False
         spikegroup = pygame.sprite.Group()
         brickgroup = pygame.sprite.Group()
-
+        spikegroup.add(Spike(57, 500, spikepic))
         # player state
         self.isalive = True
     def nextframe(self, c):
@@ -309,6 +309,7 @@ class Spike(Object):
         super(Spike, self).update()
 
 
+spikegroup.add(Spike(10, 500, spikepic))
 spiking = True
 
 
@@ -355,11 +356,11 @@ def generate_stage():
             filling = True
     print(l,fill)
     seed_record+=(str(l)+" "+"".join(fill)+'f')
+pygame.init()
 class CustomEnv(gym.Env):
     def __init__(self, env_config={}):
         # self.observation_space = gym.spaces.Box()
         # self.action_space = gym.spaces.Box()
-        pygame.init()
         self.player = Player()
         self.action_space = spaces.Discrete(32)
         self.observation_space = spaces.Box(low=np.zeros((122,)), high=np.zeros((122,)), dtype=np.float64)

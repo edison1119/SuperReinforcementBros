@@ -365,6 +365,8 @@ class CustomEnv(gym.Env):
         self.deltay = 0
         self.frame = 0
         self.expectxpos=0
+        self.expectreward=0
+        self.isnotmoving=False
     def init_render(self):
         self.screen = pygame.display.set_mode((window_width, window_height))
         #self.clock = pygame.time.Clock()
@@ -392,12 +394,16 @@ class CustomEnv(gym.Env):
             self.player.update(action)
         self.deltax = self.player.xpos - formerx
         self.deltay = self.player.rect.y - formery
+        self.isnotmoving=(self.player.xpos == formerx and self.player.rect.y == formery)
         if self.player.xpos<self.expectxpos:
-            self.expectreward= (self.player.xpos-self.expectxpos)/200
-            self.expectxpos+=2
+            self.expectreward= (self.player.xpos-self.expectxpos) / 200 * (4 if self.isnotmoving else 1)
+            self.expectxpos += 2
         else:
-            self.expectreward= (self.player.xpos-self.expectxpos)/100
-            self.expectxpos+=2.5
+            if not self.isnotmoving:
+                self.expectreward= (self.player.xpos-self.expectxpos)/100
+            else:
+                self.expectreward=0
+            self.expectxpos += 2.5
         print('Push:',self.expectreward)
         returner = np.concatenate((
              np.array([self.player.rect.x, self.player.rect.y]),
@@ -406,12 +412,12 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
-                   (-1.5 if self.player.xpos == formerx and self.player.rect.y == formery else \
+                   ((-1.5 if self.isnotmoving else \
                     ((2 if self.player.finish and self.player.isalive else 0)
-                    - (2 if not self.player.isalive else 0))+1)+self.expectreward,\
+                    - (2 if not self.player.isalive else 0))+1)+self.expectreward)/100,\
                    self.player.finish, {}
-        print(returner[-3])
-        if self.player.xpos == formerx and self.player.rect.y == formery:
+        print(returner[1])
+        if self.isnotmoving:
             print('a')
         return returner
 

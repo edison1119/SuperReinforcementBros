@@ -413,8 +413,8 @@ class CustomEnv(gym.Env):
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
                    ((-1.5 if self.isnotmoving else \
-                    ((2 if self.player.finish and self.player.isalive else 0)
-                    - (2 if not self.player.isalive else 0))+1)+self.expectreward)/100,\
+                    ((20 if self.player.finish and self.player.isalive else 0)
+                    - (20 if not self.player.isalive else 0))+1)+self.expectreward)/100,\
                    self.player.finish, {}
         print(returner[1])
         if self.isnotmoving:

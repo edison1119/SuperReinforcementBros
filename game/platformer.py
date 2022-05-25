@@ -61,7 +61,7 @@ class Player(pygame.sprite.Sprite):
         # player state
         self.isalive = True
 
-        generate_stage()
+        #generate_stage()
 
     def nextframe(self, c):
         """
@@ -226,7 +226,7 @@ class Player(pygame.sprite.Sprite):
             self.g = r * 55.88 / framerate ** 2
         if self.rect.x > 1020:
             self.rect.x = -20
-            generate_stage()
+            #generate_stage()
         elif self.rect.x < -20:
             self.rect.x = 1020
         # xvel process

@@ -84,6 +84,8 @@ class Player(pygame.sprite.Sprite):
 
         # player state
         self.isalive = True
+
+        spikegroup.add(Spike(50, 500, spikepic))
     def nextframe(self, c):
         global text
         """

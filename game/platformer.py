@@ -62,6 +62,7 @@ class Player(pygame.sprite.Sprite):
         self.isalive = True
 
         #generate_stage()
+        #spikegroup.add(Spike(50, 500, spikepic))
 
     def nextframe(self, c):
         """

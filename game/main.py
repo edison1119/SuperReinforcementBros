@@ -447,8 +447,8 @@ class CustomEnv(gym.Env):
             self.player.update()
         pygame.display.update()
 
-    #def generate_stage(self):
-        #generate_stage()
+    def generate_stage(self):
+        generate_stage()
         # fill = set()
         # brickgroup.empty()
         # spikegroup.empty()

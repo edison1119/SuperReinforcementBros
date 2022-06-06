@@ -85,7 +85,11 @@ class Player(pygame.sprite.Sprite):
         # player state
         self.isalive = True
 
+        brickgroup.empty()
+        spikegroup.empty()
         spikegroup.add(Spike(50, 500, spikepic))
+        brickgroup.add(Brick(400, 400, brickpic))
+
     def nextframe(self, c):
         global text
         """

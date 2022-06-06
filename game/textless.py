@@ -85,7 +85,10 @@ class Player(pygame.sprite.Sprite):
         # player state
         self.isalive = True
 
+        brickgroup.empty()
+        spikegroup.empty()
         spikegroup.add(Spike(50, 500, spikepic))
+        brickgroup.add(Brick(400, 400, brickpic))
     def nextframe(self, c):
         global text
         """
@@ -324,7 +327,7 @@ def generate_stage():
     brickgroup.empty()
     spikegroup.empty()
     l = 0
-    for x in range(random.randint(2, 10)):#TODO 5~30 => 1(not activate)
+    for x in range(random.randint(0, 0)):#TODO 5~30 => 1(not activate)
         a, b = random.randint(5, 26), random.randint(0, 3)
         i = 1
         d = 1
@@ -343,7 +346,7 @@ def generate_stage():
     for i in fill:
         brickgroup.add(Brick(int(i[:2]) * 38 + 19, 500 - int(i[2:]) * 39, brickpic))
     if spiking:
-        for x in range(random.randint(2, 5)): #TODO 2~10=>2~5
+        for x in range(random.randint(0, 0)): #TODO 2~10=>2~5
             a = random.randint(6, 24)
             i = 1
             d = 1

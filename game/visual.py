@@ -370,6 +370,7 @@ class CustomEnv(gym.Env):
         self.expectxpos=0
         self.expectreward=0
         self.isnotmoving=False
+        self.idleframe = 0
     def init_render(self):
         self.screen = pygame.display.set_mode((window_width, window_height))
         self.clock = pygame.time.Clock()
@@ -402,6 +403,12 @@ class CustomEnv(gym.Env):
         self.deltax = self.player.xpos - formerx
         self.deltay = self.player.rect.y - formery
         self.isnotmoving=(self.player.xpos == formerx and self.player.rect.y == formery)
+        if self.isnotmoving:
+            self.idleframe+=1
+            if self.idleframe >50:
+                self.player.isalive=False
+        else:
+            self.idleframe-=5
         if self.player.xpos<self.expectxpos:
             self.expectreward= (self.player.xpos-self.expectxpos) / 200 * (4 if self.isnotmoving else 1)
             self.expectxpos += 2
@@ -419,7 +426,7 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
-                   ((-10 if self.isnotmoving else \
+                   ((-5*self.idleframe if self.isnotmoving else \
                     ((200 if self.player.finish and self.player.isalive else 0)
                     - (150 if not self.player.isalive else 0))+3)+self.expectreward)/100,\
                    self.player.finish, {}

@@ -89,7 +89,6 @@ class Player(pygame.sprite.Sprite):
         spikegroup.empty()
         spikegroup.add(Spike(50, 500, spikepic))
         brickgroup.add(Brick(400, 400, brickpic))
-
     def nextframe(self, c):
         global text
         """
@@ -113,7 +112,7 @@ class Player(pygame.sprite.Sprite):
         fourth : right
         fifth  : sprint (fireball)
         """
-        print(c,self.xpos)
+        #print(c,self.xpos)
         if isinstance(c, int):
             c = str(c)
         if c[0] == "1":
@@ -170,7 +169,7 @@ class Player(pygame.sprite.Sprite):
         global next_stage
         self.nextframe(f'{action:05b}')
         # movement
-        # print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
+        #print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
         if not self.right and not self.left:
             self.runtimer += 1
         else:
@@ -328,7 +327,7 @@ def generate_stage():
     brickgroup.empty()
     spikegroup.empty()
     l = 0
-    for x in range(random.randint(2, 10)):#TODO 5~30 => 1(not activate)
+    for x in range(random.randint(0, 0)):#TODO 5~30 => 1(not activate)
         a, b = random.randint(5, 26), random.randint(0, 3)
         i = 1
         d = 1
@@ -347,7 +346,7 @@ def generate_stage():
     for i in fill:
         brickgroup.add(Brick(int(i[:2]) * 38 + 19, 500 - int(i[2:]) * 39, brickpic))
     if spiking:
-        for x in range(random.randint(2, 5)): #TODO 2~10=>2~5
+        for x in range(random.randint(0, 0)): #TODO 2~10=>2~5
             a = random.randint(6, 24)
             i = 1
             d = 1
@@ -362,7 +361,7 @@ def generate_stage():
                 fill.add(str(a).zfill(2) + "0")
                 spikegroup.add(Spike(a * 38 + 19, 500, spikepic))  # 526 = 13*39+19
             filling = True
-    print(l,fill)
+    #print(l,fill)
     seed_record+=(str(l)+" "+"".join(fill)+'f')
 class CustomEnv(gym.Env):
     def __init__(self, env_config={}):
@@ -415,7 +414,7 @@ class CustomEnv(gym.Env):
             else:
                 self.expectreward=0
             self.expectxpos += 2.5
-        print('Push:',self.expectreward)
+        #print('Push:',self.expectreward)
         returner = np.concatenate((
              np.array([self.player.rect.x, self.player.rect.y]),
              np.concatenate((np.concatenate([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
@@ -427,9 +426,10 @@ class CustomEnv(gym.Env):
                     ((20 if self.player.nextstage and self.player.isalive else 0)
                     - (20 if not self.player.isalive else 0))+1)+self.expectreward)/100,\
                    self.player.finish, {}
-        print(returner[1])
+        #print(returner[1])
         if self.isnotmoving:
-            print('a')
+            pass
+            #print('a')
         return returner
 
     def render(self):
@@ -1195,7 +1195,7 @@ def seed_torch(seed):
 
 
 # parameters
-num_frames = 500000
+num_frames = 100000
 memory_size = 10000
 batch_size = 128
 target_update = 100

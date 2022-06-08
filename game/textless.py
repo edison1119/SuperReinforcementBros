@@ -1203,8 +1203,15 @@ target_update = 100
 # train
 agent = DQNAgent(env, memory_size, batch_size, target_update)
 agent.train(num_frames, num_frames)#TODO parameter splited into 100 plotting segment
-
-file=open('record.txt','w')
+current_directory=os.getcwd()
+storage= os.path.join(current_directory,'storage')
+n = open(os.path.join(storage,'store.txt'),'r')
+x=n.read()
+n.close()
+del n
+n = open(os.path.join(storage,'store.txt'),'w')
+n.write(str(int(x)+1))
+file=open(os.path.join(storage,'record.txt'+x),'w+')
 file.write('\n'.join(action_list)) #output side
-seed_file=open('seed.txt','w')
+seed_file=open(os.path.join(storage,'seed.txt'+x),'w+')
 seed_file.write(seed_record)

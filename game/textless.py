@@ -1177,9 +1177,16 @@ class DQNAgent:
         plt.subplot(132)
         plt.title('loss')
         plt.plot(losses)
-        plt.show()
-        plt.savefig('f.png')
-        plt.close()
+        #fig=plt.gcf()
+        current_directory = os.getcwd()
+        storage = os.path.join(current_directory, 'storage')
+        n = open(os.path.join(storage, 'store.txt'), 'r')
+        x = n.read()
+        n.close()
+        del n
+        plt.savefig(f'f{x}.png')
+        #plt.show()
+        #plt.close()
 
 
 
@@ -1211,7 +1218,7 @@ n.close()
 del n
 n = open(os.path.join(storage,'store.txt'),'w')
 n.write(str(int(x)+1))
-file=open(os.path.join(storage,'record.txt'+x),'w+')
+file=open(os.path.join(storage,f'record{x}.txt'),'w+')
 file.write('\n'.join(action_list)) #output side
-seed_file=open(os.path.join(storage,'seed.txt'+x),'w+')
+seed_file=open(os.path.join(storage,f'seed{x}.txt'),'w+')
 seed_file.write(seed_record)

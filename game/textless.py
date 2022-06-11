@@ -89,6 +89,7 @@ class Player(pygame.sprite.Sprite):
         spikegroup.empty()
         spikegroup.add(Spike(50, 500, spikepic))
         brickgroup.add(Brick(400, 400, brickpic))
+
     def nextframe(self, c):
         global text
         """
@@ -1081,8 +1082,7 @@ class DQNAgent:
                     self._target_hard_update()
 
             # plotting
-            if frame_idx % plotting_interval == 0:
-                self._plot(frame_idx, scores, losses)
+        self._plot(frame_idx, scores, losses)
 
         self.env.close()
 
@@ -1208,6 +1208,7 @@ target_update = 100
 
 # train
 for i in range(100):
+    print('loop:',i)
     seed = random.randint(1, 999999)
     env = CustomEnv()
     agent = DQNAgent(env, memory_size, batch_size, target_update)
@@ -1220,7 +1221,13 @@ for i in range(100):
     del n
     n = open(os.path.join(storage,'store.txt'),'w')
     n.write(str(int(x)+1))
+    n.close()
+    del n
     file=open(os.path.join(storage,f'record{x}.txt'),'w+')
     file.write('\n'.join(action_list)) #output side
     seed_file=open(os.path.join(storage,f'seed{x}.txt'),'w+')
     seed_file.write(seed_record)
+    file.close()
+    seed_file.close()
+    action_list=[]
+    seed_record=[]

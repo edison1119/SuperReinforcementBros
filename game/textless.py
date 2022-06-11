@@ -1184,7 +1184,7 @@ class DQNAgent:
         x = n.read()
         n.close()
         del n
-        plt.savefig(f'f{x}.png')
+        plt.savefig(f'image/f{x}.png')
         #plt.show()
         #plt.close()
 

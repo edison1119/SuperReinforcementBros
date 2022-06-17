@@ -11,12 +11,12 @@ pygame.init()
 
 # screen setup
 screen = pygame.display.set_mode((1000, 600))
-pygame.display.set_caption('platformer')
+pygame.display.set_caption('env/platformer')
 # picture import
-brickpic = pygame.image.load('brick.bmp')
-bluepic = pygame.image.load('blue.bmp')
-keypic = pygame.image.load('whitesquare.bmp')
-spikepic = pygame.image.load('spike.bmp')
+brickpic = pygame.image.load('env/brick.bmp')
+bluepic = pygame.image.load('env/blue.bmp')
+keypic = pygame.image.load('env/whitesquare.bmp')
+spikepic = pygame.image.load('env/spike.bmp')
 
 r = 38
 spikepic = pygame.transform.scale(spikepic, (r, r))

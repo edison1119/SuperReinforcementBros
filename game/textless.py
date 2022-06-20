@@ -88,8 +88,8 @@ class Player(pygame.sprite.Sprite):
 
         brickgroup.empty()
         spikegroup.empty()
-        spikegroup.add(Spike(50, 500, spikepic))
-        brickgroup.add(Brick(400, 400, brickpic))
+        #spikegroup.add(Spike(50, 500, spikepic))
+        #brickgroup.add(Brick(400, 400, brickpic))
 
     def nextframe(self, c):
         global text
@@ -417,7 +417,7 @@ class CustomEnv(gym.Env):
         #        self.expectreward=0
         #    self.expectxpos += 2.5
         #print('Push:',self.expectreward)
-        #print(formerx, self.player.rect.x, self.deltax, self.isnotmoving)
+        #print(self.deltax, self.deltay, self.isnotmoving)
         returner = np.concatenate((
              np.array([self.player.rect.x, self.player.rect.y]),
              np.concatenate((np.concatenate([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
@@ -1064,7 +1064,7 @@ class DQNAgent:
             fraction = min(frame_idx / num_frames, 1.0)
             self.beta = self.beta + fraction * (1.0 - self.beta)
             # if episode ends
-            if done or self.trainframe == 1000:#or (self.env.deltax == 0 and self.env.deltay == 0 and action):
+            if done or self.trainframe == num_frames//10:#or (self.env.deltax == 0 and self.env.deltay == 0 and action):
                 state = self.env.reset()
                 scores.append(score)
                 score = 0

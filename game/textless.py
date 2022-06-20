@@ -417,7 +417,7 @@ class CustomEnv(gym.Env):
         #        self.expectreward=0
         #    self.expectxpos += 2.5
         #print('Push:',self.expectreward)
-        print(formerx, self.player.rect.x, self.deltax, self.isnotmoving)
+        #print(formerx, self.player.rect.x, self.deltax, self.isnotmoving)
         returner = np.concatenate((
              np.array([self.player.rect.x, self.player.rect.y]),
              np.concatenate((np.concatenate([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
@@ -875,7 +875,7 @@ class DQNAgent:
             memory_size: int,
             batch_size: int,
             target_update: int,
-            gamma: float = 0.99,
+            gamma: float = 0.5,
             # PER parameters
             alpha: float = 0.2,
             beta: float = 0.6,
@@ -1181,13 +1181,13 @@ class DQNAgent:
         plt.title('loss')
         plt.plot(losses)
         #fig=plt.gcf()
-        current_directory = os.getcwd()
+        #current_directory = os.getcwd()
         #storage = os.path.join(current_directory, 'storage')
         #n = open(os.path.join(storage, 'store.txt'), 'r')
         #x = n.read()
         #n.close()
         #del n
-        #plt.savefig(f'image/f{x}.png')
+        #fig.savefig(f'storage/f{x}.png')
         plt.show()
         #plt.close()
 
@@ -1204,7 +1204,7 @@ def seed_torch(seed):
 
 
 # parameters
-num_frames = 100
+num_frames = 100000
 memory_size = 10000
 batch_size = 128
 target_update = 100

@@ -1,5 +1,5 @@
 #!/bin/sh
-print()
+
 import pygame
 from pygame.locals import *
 from gym import spaces
@@ -80,9 +80,17 @@ class Player(pygame.sprite.Sprite):
         self.jumpable = True
         self.wall = False
         self.finish = False
+        self.nextstage = False
+        self.stage = 0
 
         # player state
         self.isalive = True
+
+        brickgroup.empty()
+        spikegroup.empty()
+        spikegroup.add(Spike(50, 500, spikepic))
+        brickgroup.add(Brick(400, 400, brickpic))
+
     def nextframe(self, c):
         global text
         """
@@ -106,6 +114,7 @@ class Player(pygame.sprite.Sprite):
         fourth : right
         fifth  : sprint (fireball)
         """
+        #print(c,self.xpos)
         if isinstance(c, int):
             c = str(c)
         if c[0] == "1":
@@ -162,7 +171,7 @@ class Player(pygame.sprite.Sprite):
         global next_stage
         self.nextframe(f'{action:05b}')
         # movement
-        # print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
+        #print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
         if not self.right and not self.left:
             self.runtimer += 1
         else:
@@ -253,11 +262,15 @@ class Player(pygame.sprite.Sprite):
             self.g = r * 55.88 / framerate ** 2
         if self.rect.x > 1020:
             self.rect.x = -20
+            self.nextstage = True
             generate_stage()
         elif self.rect.x < -20:
             self.wall=True
             self.xpos += -self.rect.x-20
             self.rect.x = -20
+            self.nextstage = False
+        else:
+            self.nextstage = False
         # xvel process
         if not self.wall:
             self.rect.x = self.rect.x + self.xvel
@@ -316,13 +329,8 @@ def generate_stage():
     brickgroup.empty()
     spikegroup.empty()
     l = 0
-<<<<<<< Updated upstream
-    for x in range(random.randint(5, 30)):#TODO 5~30 => 1(not activate)
-        a, b = random.randint(0, 26), random.randint(0, 3)
-=======
-    for x in range(random.randint(0, 0)):#2, 10)):#TODO 5~30 => 1(not activate)
+    for x in range(random.randint(0, 0)):#TODO 5~30 => 1(not activate)
         a, b = random.randint(5, 26), random.randint(0, 3)
->>>>>>> Stashed changes
         i = 1
         d = 1
         while str(a).zfill(2) + str(b) in fill:
@@ -340,13 +348,8 @@ def generate_stage():
     for i in fill:
         brickgroup.add(Brick(int(i[:2]) * 38 + 19, 500 - int(i[2:]) * 39, brickpic))
     if spiking:
-<<<<<<< Updated upstream
-        for x in range(random.randint(2, 10)):
-            a = random.randint(2, 24)
-=======
-        for x in range(random.randint(0, 0)):#2, 5)): #TODO 2~10=>2~5
+        for x in range(random.randint(0, 0)): #TODO 2~10=>2~5
             a = random.randint(6, 24)
->>>>>>> Stashed changes
             i = 1
             d = 1
             while str(a).zfill(2) + "0" in fill:
@@ -360,7 +363,7 @@ def generate_stage():
                 fill.add(str(a).zfill(2) + "0")
                 spikegroup.add(Spike(a * 38 + 19, 500, spikepic))  # 526 = 13*39+19
             filling = True
-    print(l,fill)
+    #print(l,fill)
     seed_record+=(str(l)+" "+"".join(fill)+'f')
 class CustomEnv(gym.Env):
     def __init__(self, env_config={}):
@@ -373,10 +376,12 @@ class CustomEnv(gym.Env):
         self.deltax = 0
         self.deltay = 0
         self.frame = 0
-
+        self.expectxpos=0
+        self.expectreward=0
+        self.isnotmoving=False
     def init_render(self):
         self.screen = pygame.display.set_mode((window_width, window_height))
-        self.clock = pygame.time.Clock()
+        #self.clock = pygame.time.Clock()
 
     def reset(self):
         self.__init__()
@@ -391,7 +396,7 @@ class CustomEnv(gym.Env):
 
     def step(self, action):
         formery = self.player.rect.y
-        formerx = self.player.xpos
+        formerx = self.player.rect.x
         self.frame += 1
         for brick in brickgroup:
             brick.update()
@@ -399,8 +404,20 @@ class CustomEnv(gym.Env):
             spike.update()
         if self.player.isalive:
             self.player.update(action)
-        self.deltax = self.player.xpos - formerx
+        self.deltax = self.player.rect.x - formerx if not self.player.nextstage else self.player.rect.x+1+1040-formerx
         self.deltay = self.player.rect.y - formery
+        self.isnotmoving=(self.player.rect.x == formerx and self.player.rect.y == formery)
+        #if self.player.xpos<self.expectxpos:
+        #    self.expectreward= (self.player.xpos-self.expectxpos) / 200 * (4 if self.isnotmoving else 1)
+        #    self.expectxpos += 2
+        #else:
+        #    if not self.isnotmoving:
+        #        self.expectreward= (self.player.xpos-self.expectxpos)/100
+        #    else:
+        #        self.expectreward=0
+        #    self.expectxpos += 2.5
+        #print('Push:',self.expectreward)
+        print(formerx, self.player.rect.x, self.deltax, self.isnotmoving)
         returner = np.concatenate((
              np.array([self.player.rect.x, self.player.rect.y]),
              np.concatenate((np.concatenate([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
@@ -408,10 +425,15 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
-                   (-1 if self.player.xpos == formerx and self.player.rect.y == formery else\
-                       (2 if self.player.finish and self.player.isalive else 0)
-                    - (5 if not self.player.isalive else 0))+(self.player.xpos-2*self.frame)/50,\
-                   self.player.finish, {}
+                   (-2 if self.isnotmoving else self.deltax), self.player.finish, {}
+            #       ((-2 if self.isnotmoving else \
+            #        ((20 if self.player.nextstage and self.player.isalive else 0)
+            #        - (20 if not self.player.isalive else 0)))+self.expectreward)/100,\
+            #       self.player.finish, {}
+        #print(returner[1])
+        if self.isnotmoving:
+            pass
+            #print('a')
         return returner
 
     def render(self):
@@ -429,8 +451,8 @@ class CustomEnv(gym.Env):
             self.player.update()
         pygame.display.update()
 
-    #def generate_stage(self):
-        #generate_stage()
+    def generate_stage(self):
+        generate_stage()
         # fill = set()
         # brickgroup.empty()
         # spikegroup.empty()
@@ -642,7 +664,6 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         assert len(indices) == len(priorities)
 
         for idx, priority in zip(indices, priorities):
-            print(priority)
             assert priority > 0
             assert 0 <= idx < len(self)
 
@@ -939,7 +960,7 @@ class DQNAgent:
 
         # mode: train / test
         self.is_test = False
-
+        self.first_train = True
         self.trainframe = 0
 
     def select_action(self, state: np.ndarray) -> np.ndarray:
@@ -1006,8 +1027,9 @@ class DQNAgent:
         clip_grad_norm_(self.dqn.parameters(), 10.0)
         self.optimizer.step()
 
-        # PER: update priorities
-        loss_for_prior = elementwise_loss.detach().cpu().numpy()
+        # PER: update priorities #TODO fix this madness of nan
+        loss_for_prior = torch.nan_to_num(elementwise_loss.detach().cpu()).numpy()
+        #loss_for_prior = elementwise_loss.detach().cpu().numpy()
         new_priorities = loss_for_prior + self.prior_eps
         self.memory.update_priorities(indices, new_priorities)
 
@@ -1063,8 +1085,7 @@ class DQNAgent:
                     self._target_hard_update()
 
             # plotting
-            if frame_idx % plotting_interval == 0:
-                self._plot(frame_idx, scores, losses)
+        self._plot(frame_idx, scores, losses)
 
         self.env.close()
 
@@ -1159,15 +1180,21 @@ class DQNAgent:
         plt.subplot(132)
         plt.title('loss')
         plt.plot(losses)
+        #fig=plt.gcf()
+        current_directory = os.getcwd()
+        #storage = os.path.join(current_directory, 'storage')
+        #n = open(os.path.join(storage, 'store.txt'), 'r')
+        #x = n.read()
+        #n.close()
+        #del n
+        #plt.savefig(f'image/f{x}.png')
         plt.show()
-        plt.savefig('f.png')
-        plt.close()
+        #plt.close()
 
 
 
 
-seed = random.randint(1, 999999)
-env = CustomEnv()
+
 def seed_torch(seed):
     torch.manual_seed(seed)
     if torch.backends.cudnn.enabled:
@@ -1177,16 +1204,33 @@ def seed_torch(seed):
 
 
 # parameters
-num_frames = 500000
+num_frames = 100
 memory_size = 10000
 batch_size = 128
 target_update = 100
 
 # train
-agent = DQNAgent(env, memory_size, batch_size, target_update)
-agent.train(num_frames, num_frames)#TODO parameter splited into 100 plotting segment
-
-file=open('record.txt','w')
-file.write('\n'.join(action_list)) #output side
-seed_file=open('seed.txt','w')
-seed_file.write(seed_record)
+for i in range(1):
+    print('loop:',i)
+    seed = random.randint(1, 999999)
+    env = CustomEnv()
+    agent = DQNAgent(env, memory_size, batch_size, target_update)
+    agent.train(num_frames, num_frames)#TODO parameter splited into 100 plotting segment
+    current_directory=os.getcwd()
+    storage= os.path.join(current_directory,'storage')
+    n = open(os.path.join(storage,'store.txt'),'r')
+    x=n.read()
+    n.close()
+    del n
+    n = open(os.path.join(storage,'store.txt'),'w')
+    n.write(str(int(x)+1))
+    n.close()
+    del n
+    file=open(os.path.join(storage,f'record{x}.txt'),'w+')
+    file.write('\n'.join(action_list)) #output side
+    seed_file=open(os.path.join(storage,f'seed{x}.txt'),'w+')
+    seed_file.write(' '.join(seed_record))
+    file.close()
+    seed_file.close()
+    action_list=[]
+    seed_record=[]

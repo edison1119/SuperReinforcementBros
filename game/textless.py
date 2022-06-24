@@ -1180,16 +1180,16 @@ class DQNAgent:
         plt.subplot(132)
         plt.title('loss')
         plt.plot(losses)
-        #fig=plt.gcf()
-        #current_directory = os.getcwd()
-        #storage = os.path.join(current_directory, 'storage')
-        #n = open(os.path.join(storage, 'store.txt'), 'r')
-        #x = n.read()
-        #n.close()
-        #del n
-        #fig.savefig(f'storage/f{x}.png')
+        fig=plt.gcf()
+        current_directory = os.getcwd()
+        storage = os.path.join(current_directory, 'storage')
+        n = open(os.path.join(storage, 'store.txt'), 'r')
+        x = n.read()
+        n.close()
+        del n
+        fig.savefig(f'storage/f{x}.png')
         plt.show()
-        #plt.close()
+        plt.close()
 
 
 

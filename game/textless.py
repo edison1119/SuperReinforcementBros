@@ -329,7 +329,7 @@ def generate_stage():
     brickgroup.empty()
     spikegroup.empty()
     l = 0
-    for x in range(random.randint(0, 0)):#TODO 5~30 => 1(not activate)
+    for x in range(random.randint(0, 30)):#TODO 5~30 => 1(not activate)
         a, b = random.randint(5, 26), random.randint(0, 3)
         i = 1
         d = 1
@@ -348,7 +348,7 @@ def generate_stage():
     for i in fill:
         brickgroup.add(Brick(int(i[:2]) * 38 + 19, 500 - int(i[2:]) * 39, brickpic))
     if spiking:
-        for x in range(random.randint(0, 0)): #TODO 2~10=>2~5
+        for x in range(random.randint(2, 5)): #TODO 2~10=>2~5
             a = random.randint(6, 24)
             i = 1
             d = 1
@@ -1064,7 +1064,7 @@ class DQNAgent:
             fraction = min(frame_idx / num_frames, 1.0)
             self.beta = self.beta + fraction * (1.0 - self.beta)
             # if episode ends
-            if done or self.trainframe == num_frames//10:#or (self.env.deltax == 0 and self.env.deltay == 0 and action):
+            if done or self.trainframe == num_frames//100:#or (self.env.deltax == 0 and self.env.deltay == 0 and action):
                 state = self.env.reset()
                 scores.append(score)
                 score = 0
@@ -1204,7 +1204,7 @@ def seed_torch(seed):
 
 
 # parameters
-num_frames = 100000
+num_frames = 500000
 memory_size = 10000
 batch_size = 128
 target_update = 100

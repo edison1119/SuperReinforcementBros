@@ -24,7 +24,7 @@ from torch.nn.utils import clip_grad_norm_
 from segment_tree import MinSegmentTree, SumSegmentTree
 
 # screen setup
-# screen = pygame.display.set_mode((1000, 600))
+screen = pygame.display.set_mode((1000, 600))
 pygame.display.set_caption('platformer')
 # picture import
 brickpic = pygame.image.load('brick.bmp')
@@ -379,7 +379,6 @@ class CustomEnv(gym.Env):
         self.expectxpos=0
         self.expectreward=0
         self.isnotmoving=False
-        self.move = []
     def init_render(self):
         self.screen = pygame.display.set_mode((window_width, window_height))
         #self.clock = pygame.time.Clock()
@@ -426,16 +425,14 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
-                   (-10 if not self.player.isalive else -2 if self.isnotmoving else self.deltax), self.player.finish, {}
+                   (-2 if self.isnotmoving else self.deltax), self.player.finish, {}
             #       ((-2 if self.isnotmoving else \
             #        ((20 if self.player.nextstage and self.player.isalive else 0)
             #        - (20 if not self.player.isalive else 0)))+self.expectreward)/100,\
             #       self.player.finish, {}
         #print(returner[1])
         if self.isnotmoving:
-            self.move.append(False)
-        else:
-            self.move.append(True)
+            pass
             #print('a')
         return returner
 
@@ -878,7 +875,7 @@ class DQNAgent:
             memory_size: int,
             batch_size: int,
             target_update: int,
-            gamma: float = 0.5,
+            gamma: float = 0.99,
             # PER parameters
             alpha: float = 0.2,
             beta: float = 0.6,
@@ -1047,7 +1044,6 @@ class DQNAgent:
         self.is_test = False
         global seed, seed_record
         global text
-        global action_list
         state = self.env.reset()
         update_cnt = 0
         losses = []
@@ -1061,19 +1057,18 @@ class DQNAgent:
             state = next_state
             score += reward
             self.trainframe += 1
-            if frame_idx > 100 and not any(self.env.move[-100:]):
-                print(action_list[-100:])
-                print("not moving", frame_idx)
-                sys.exit()
+
             # NoisyNet: removed decrease of epsilon
+
             # PER: increase beta
             fraction = min(frame_idx / num_frames, 1.0)
             self.beta = self.beta + fraction * (1.0 - self.beta)
             # if episode ends
-            if done or self.trainframe == num_frames//100:#or (self.env.deltax == 0 and self.env.deltay == 0 and action):
+            if done or self.trainframe == 1000:#or (self.env.deltax == 0 and self.env.deltay == 0 and action):
                 state = self.env.reset()
                 scores.append(score)
                 score = 0
+                action_list.append(text)
                 seed = random.randint(1,999999)
                 text = str(seed) + ' '
                 seed_record+='\n'
@@ -1090,7 +1085,8 @@ class DQNAgent:
                     self._target_hard_update()
 
             # plotting
-        self._plot(frame_idx, scores, losses)
+            if frame_idx % plotting_interval == 0:
+                self._plot(frame_idx, scores, losses)
 
         self.env.close()
 
@@ -1185,21 +1181,15 @@ class DQNAgent:
         plt.subplot(132)
         plt.title('loss')
         plt.plot(losses)
-        fig=plt.gcf()
-        current_directory = os.getcwd()
-        storage = os.path.join(current_directory, 'storage')
-        n = open(os.path.join(storage, 'store.txt'), 'r')
-        x = n.read()
-        n.close()
-        del n
-        fig.savefig(f'storage/f{x}.png')
         plt.show()
+        plt.savefig('f.png')
         plt.close()
 
 
 
 
-
+seed = random.randint(1, 999999)
+env = CustomEnv()
 def seed_torch(seed):
     torch.manual_seed(seed)
     if torch.backends.cudnn.enabled:
@@ -1209,33 +1199,16 @@ def seed_torch(seed):
 
 
 # parameters
-num_frames = 400000
+num_frames = 500000
 memory_size = 10000
 batch_size = 128
 target_update = 100
 
 # train
-for i in range(1):
-    print('loop:',i)
-    seed = random.randint(1, 999999)
-    env = CustomEnv()
-    agent = DQNAgent(env, memory_size, batch_size, target_update)
-    agent.train(num_frames, num_frames)#TODO parameter splited into 100 plotting segment
-    current_directory=os.getcwd()
-    storage= os.path.join(current_directory,'storage')
-    n = open(os.path.join(storage,'store.txt'),'r')
-    x=n.read()
-    n.close()
-    del n
-    n = open(os.path.join(storage,'store.txt'),'w')
-    n.write(str(int(x)+1))
-    n.close()
-    del n
-    file=open(os.path.join(storage,f'record{x}.txt'),'w+')
-    file.write('\n'.join(action_list)) #output side
-    seed_file=open(os.path.join(storage,f'seed{x}.txt'),'w+')
-    seed_file.write(' '.join(seed_record))
-    file.close()
-    seed_file.close()
-    action_list=[]
-    seed_record=[]
+agent = DQNAgent(env, memory_size, batch_size, target_update)
+agent.train(num_frames, num_frames)#TODO parameter splited into 100 plotting segment
+
+file=open('record.txt','w')
+file.write('\n'.join(action_list)) #output side
+seed_file=open('seed.txt','w')
+seed_file.write(seed_record)

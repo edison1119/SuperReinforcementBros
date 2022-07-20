@@ -1062,9 +1062,10 @@ class DQNAgent:
             score += reward
             self.trainframe += 1
             if frame_idx > 100 and not any(self.env.move[-100:]):
-                print(action_list[-100:])
+                print(text)
                 print("not moving", frame_idx)
-                sys.exit()
+                return 1
+                #TODO
             # NoisyNet: removed decrease of epsilon
             # PER: increase beta
             fraction = min(frame_idx / num_frames, 1.0)
@@ -1093,7 +1094,7 @@ class DQNAgent:
         self._plot(frame_idx, scores, losses)
 
         self.env.close()
-
+        return 0
     def test(self) -> List[np.ndarray]:
         """Test the agent."""
         self.is_test = True
@@ -1215,12 +1216,13 @@ batch_size = 128
 target_update = 100
 
 # train
-for i in range(1):
-    print('loop:',i)
+def looptrain():
+    global action_list, seed_record, seed
     seed = random.randint(1, 999999)
     env = CustomEnv()
     agent = DQNAgent(env, memory_size, batch_size, target_update)
-    agent.train(num_frames, num_frames)#TODO parameter splited into 100 plotting segment
+    if agent.train(num_frames, num_frames) == 1:#TODO parameter splited into 100 plotting segment
+        return 1
     current_directory=os.getcwd()
     storage= os.path.join(current_directory,'storage')
     n = open(os.path.join(storage,'store.txt'),'r')
@@ -1239,3 +1241,4 @@ for i in range(1):
     seed_file.close()
     action_list=[]
     seed_record=[]
+    return 0

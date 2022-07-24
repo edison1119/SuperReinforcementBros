@@ -92,7 +92,7 @@ class Player(pygame.sprite.Sprite):
         #brickgroup.add(Brick(400, 400, brickpic))
 
     def nextframe(self, c):
-        global text
+        global text, action_list
         """
         (old solution)
         0: No movement
@@ -117,6 +117,7 @@ class Player(pygame.sprite.Sprite):
         #print(c,self.xpos)
         if isinstance(c, int):
             c = str(c)
+        action_list.append(c)
         if c[0] == "1":
             if not self.jump and self.jumpable:
                 self.jump = True
@@ -1210,7 +1211,7 @@ def seed_torch(seed):
 
 
 # parameters
-num_frames = 1000
+num_frames = 400000
 memory_size = 10000
 batch_size = 128
 target_update = 100

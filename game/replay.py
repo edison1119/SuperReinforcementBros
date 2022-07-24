@@ -273,7 +273,7 @@ class Spike(Object):
 
 
 spiking = True
-terrain_record = open("record.txt",'r')
+terrain_record = open("record0.txt",'r')
 
 def generate_stage():
     fill = set()

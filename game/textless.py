@@ -1210,7 +1210,7 @@ def seed_torch(seed):
 
 
 # parameters
-num_frames = 400000
+num_frames = 1000
 memory_size = 10000
 batch_size = 128
 target_update = 100

@@ -1,6 +1,8 @@
 import textless
-for i in range(1):
+from importlib import reload
+for i in range(100):
     print("loop:",i)
+    reload(textless)
     if textless.looptrain() == 1:
         print('e')
 # ------------------- alternative

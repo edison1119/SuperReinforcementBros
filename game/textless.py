@@ -23,6 +23,8 @@ from IPython.display import clear_output
 from torch.nn.utils import clip_grad_norm_
 from segment_tree import MinSegmentTree, SumSegmentTree
 
+from pathlib import Path
+
 # screen setup
 # screen = pygame.display.set_mode((1000, 600))
 pygame.display.set_caption('platformer')
@@ -1063,7 +1065,7 @@ class DQNAgent:
             score += reward
             self.trainframe += 1
             if frame_idx > 100 and not any(self.env.move[-100:]):
-                print(text)
+                #print(text)
                 print("not moving", frame_idx)
                 return 1
                 #TODO
@@ -1072,7 +1074,7 @@ class DQNAgent:
             fraction = min(frame_idx / num_frames, 1.0)
             self.beta = self.beta + fraction * (1.0 - self.beta)
             # if episode ends
-            if done or self.trainframe == num_frames//100:#or (self.env.deltax == 0 and self.env.deltay == 0 and action):
+            if done or self.trainframe == num_frames//self.target_update:#or (self.env.deltax == 0 and self.env.deltay == 0 and action):
                 state = self.env.reset()
                 scores.append(score)
                 score = 0
@@ -1214,7 +1216,7 @@ def seed_torch(seed):
 num_frames = 400000
 memory_size = 10000
 batch_size = 128
-target_update = 100
+target_update = 1
 
 # train
 def looptrain():
@@ -1242,4 +1244,6 @@ def looptrain():
     seed_file.close()
     action_list=[]
     seed_record=[]
+    state = {"dqn": agent.dqn.state_dict(), "dqn_target": agent.dqn_target.state_dict()}
+    torch.save(state, f'storage/model{x}.pth')
     return 0

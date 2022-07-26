@@ -2,6 +2,13 @@ import pygame
 from pygame.locals import *
 from gym import spaces
 
+import gym, torch, numpy as np, torch.nn as nn
+from torch.utils.tensorboard import SummaryWriter
+import tianshou as ts
+
+import os
+import sys
+
 import math
 import random
 from collections import deque
@@ -75,13 +82,19 @@ class Player(pygame.sprite.Sprite):
         self.jumpable = True
         self.wall = False
         self.finish = False
+        self.nextstage = False
+        self.stage = 0
 
         # player state
         self.isalive = True
-        generate_stage()
+
+        brickgroup.empty()
+        spikegroup.empty()
+        #spikegroup.add(Spike(50, 500, spikepic))
+        #brickgroup.add(Brick(400, 400, brickpic))
 
     def nextframe(self, c):
-        global text
+        global text, action_list
         """
         (old solution)
         0: No movement
@@ -103,8 +116,10 @@ class Player(pygame.sprite.Sprite):
         fourth : right
         fifth  : sprint (fireball)
         """
+        #print(c,self.xpos)
         if isinstance(c, int):
             c = str(c)
+        action_list.append(c)
         if c[0] == "1":
             if not self.jump and self.jumpable:
                 self.jump = True
@@ -159,7 +174,7 @@ class Player(pygame.sprite.Sprite):
         global next_stage
         self.nextframe(f'{action:05b}')
         # movement
-        # print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
+        #print('onplat:', self.onplatform, 'jable:', self.jumpable, 'Jtimer:', self.jumptimer)
         if not self.right and not self.left:
             self.runtimer += 1
         else:
@@ -250,11 +265,15 @@ class Player(pygame.sprite.Sprite):
             self.g = r * 55.88 / framerate ** 2
         if self.rect.x > 1020:
             self.rect.x = -20
+            self.nextstage = True
             generate_stage()
         elif self.rect.x < -20:
             self.wall=True
             self.xpos += -self.rect.x-20
             self.rect.x = -20
+            self.nextstage = False
+        else:
+            self.nextstage = False
         # xvel process
         if not self.wall:
             self.rect.x = self.rect.x + self.xvel
@@ -266,8 +285,8 @@ class Player(pygame.sprite.Sprite):
         #screen.blit(self.image, (self.rect.x, self.rect.y))
         self.onplatform = False
         self.wall = False
-        #if self.xpos > 204000 or not self.isalive:
-        #    self.finish = True
+        if self.xpos > 10200 or not self.isalive:
+            self.finish = True
 
 
 class Object(pygame.sprite.Sprite):
@@ -313,8 +332,8 @@ def generate_stage():
     brickgroup.empty()
     spikegroup.empty()
     l = 0
-    for x in range(random.randint(0, 0)):#TODO 5~30 => 1(not activate)
-        a, b = random.randint(0, 26), random.randint(0, 3)
+    for x in range(random.randint(0, 30)):#TODO 5~30 => 1(not activate)
+        a, b = random.randint(5, 26), random.randint(0, 3)
         i = 1
         d = 1
         while str(a).zfill(2) + str(b) in fill:
@@ -332,8 +351,8 @@ def generate_stage():
     for i in fill:
         brickgroup.add(Brick(int(i[:2]) * 38 + 19, 500 - int(i[2:]) * 39, brickpic))
     if spiking:
-        for x in range(random.randint(0, 0)):
-            a = random.randint(2, 24)
+        for x in range(random.randint(2, 5)): #TODO 2~10=>2~5
+            a = random.randint(6, 24)
             i = 1
             d = 1
             while str(a).zfill(2) + "0" in fill:
@@ -360,10 +379,13 @@ class CustomEnv(gym.Env):
         self.deltax = 0
         self.deltay = 0
         self.frame = 0
-
+        self.expectxpos=0
+        self.expectreward=0
+        self.isnotmoving=False
+        self.move = []
     def init_render(self):
         self.screen = pygame.display.set_mode((window_width, window_height))
-        self.clock = pygame.time.Clock()
+        #self.clock = pygame.time.Clock()
 
     def reset(self):
         self.__init__()
@@ -378,7 +400,7 @@ class CustomEnv(gym.Env):
 
     def step(self, action):
         formery = self.player.rect.y
-        formerx = self.player.xpos
+        formerx = self.player.rect.x
         self.frame += 1
         for brick in brickgroup:
             brick.update()
@@ -386,19 +408,38 @@ class CustomEnv(gym.Env):
             spike.update()
         if self.player.isalive:
             self.player.update(action)
-        self.deltax = self.player.xpos - formerx
+        self.deltax = self.player.rect.x - formerx if not self.player.nextstage else self.player.rect.x+1+1040-formerx
         self.deltay = self.player.rect.y - formery
-        #returner = np.concatenate((
-             #np.array([self.player.rect.x, self.player.rect.y]),
-             #np.concatenate((np.concatenate([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
-             #                np.empty((60 - len(brickgroup)*2,)))) if len(brickgroup) else np.empty((60,)),
-             #np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
-             #                np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
-            #), \
-        returner = np.concatenate((np.array([self.player.xpos, self.player.rect.y]), np.empty((120,)))),\
-                   self.deltax, self.player.finish, {}
-        #(-1 if self.player.xpos == formerx and self.player.rect.y == formery else\ (2 if self.player.finish and self.player.isalive else 0) - (5 if not self.player.isalive else 0))+(self.player.xpos-5*self.frame)/50,\
-
+        self.isnotmoving=(self.player.rect.x == formerx and self.player.rect.y == formery)
+        #if self.player.xpos<self.expectxpos:
+        #    self.expectreward= (self.player.xpos-self.expectxpos) / 200 * (4 if self.isnotmoving else 1)
+        #    self.expectxpos += 2
+        #else:
+        #    if not self.isnotmoving:
+        #        self.expectreward= (self.player.xpos-self.expectxpos)/100
+        #    else:
+        #        self.expectreward=0
+        #    self.expectxpos += 2.5
+        #print('Push:',self.expectreward)
+        #print(self.deltax, self.deltay, self.isnotmoving)
+        returner = np.concatenate((
+             np.array([self.player.rect.x, self.player.rect.y]),
+             np.concatenate((np.concatenate([np.array([brick.rect.x, brick.rect.y]) for brick in brickgroup]),
+                             np.empty((60 - len(brickgroup)*2,)))) if len(brickgroup) else np.empty((60,)),
+             np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
+                             np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
+            ), \
+                   (-10 if not self.player.isalive else -2 if self.isnotmoving else self.deltax), self.player.finish, {}
+            #       ((-2 if self.isnotmoving else \
+            #        ((20 if self.player.nextstage and self.player.isalive else 0)
+            #        - (20 if not self.player.isalive else 0)))+self.expectreward)/100,\
+            #       self.player.finish, {}
+        #print(returner[1])
+        if self.isnotmoving:
+            self.move.append(False)
+        else:
+            self.move.append(True)
+            #print('a')
         return returner
 
     def render(self):
@@ -446,336 +487,3 @@ class CustomEnv(gym.Env):
 
 
 ###################################################################################################
-class ReplayBuffer:
-    """A simple numpy replay buffer."""
-
-    def __init__(self, obs_dim: int, size: int, batch_size: int = 32):
-        self.obs_buf = np.zeros([size, obs_dim], dtype=np.float32)
-        self.next_obs_buf = np.zeros([size, obs_dim], dtype=np.float32)
-        self.acts_buf = np.zeros([size], dtype=np.float32)
-        self.rews_buf = np.zeros([size], dtype=np.float32)
-        self.done_buf = np.zeros(size, dtype=np.float32)
-        self.max_size, self.batch_size = size, batch_size
-        self.ptr, self.size, = 0, 0
-
-    def store(
-        self,
-        obs: np.ndarray,
-        act: np.ndarray,
-        rew: float,
-        next_obs: np.ndarray,
-        done: bool,
-    ):
-        self.obs_buf[self.ptr] = obs
-        self.next_obs_buf[self.ptr] = next_obs
-        self.acts_buf[self.ptr] = act
-        self.rews_buf[self.ptr] = rew
-        self.done_buf[self.ptr] = done
-        self.ptr = (self.ptr + 1) % self.max_size
-        self.size = min(self.size + 1, self.max_size)
-
-    def sample_batch(self) -> Dict[str, np.ndarray]:
-        idxs = np.random.choice(self.size, size=self.batch_size, replace=False)
-        return dict(obs=self.obs_buf[idxs],
-                    next_obs=self.next_obs_buf[idxs],
-                    acts=self.acts_buf[idxs],
-                    rews=self.rews_buf[idxs],
-                    done=self.done_buf[idxs])
-
-    def __len__(self) -> int:
-        return self.size
-
-class Network(nn.Module):
-    def __init__(self, in_dim: int, out_dim: int):
-        """Initialization."""
-        super(Network, self).__init__()
-
-        self.layers = nn.Sequential(
-            nn.Linear(in_dim, 128),
-            nn.ReLU(),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Linear(128, out_dim)
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward method implementation."""
-        return self.layers(x)
-
-
-class DQNAgent:
-    """DQN Agent interacting with environment.
-
-    Attribute:
-        env (gym.Env): openAI Gym environment
-        memory (ReplayBuffer): replay memory to store transitions
-        batch_size (int): batch size for sampling
-        epsilon (float): parameter for epsilon greedy policy
-        epsilon_decay (float): step size to decrease epsilon
-        max_epsilon (float): max value of epsilon
-        min_epsilon (float): min value of epsilon
-        target_update (int): period for target model's hard update
-        gamma (float): discount factor
-        dqn (Network): model to train and select actions
-        dqn_target (Network): target model to update
-        optimizer (torch.optim): optimizer for training dqn
-        transition (list): transition information including
-                           state, action, reward, next_state, done
-    """
-
-    def __init__(
-            self,
-            env: gym.Env,
-            memory_size: int,
-            batch_size: int,
-            target_update: int,
-            epsilon_decay: float,
-            max_epsilon: float = 1.0,
-            min_epsilon: float = 0.1,
-            gamma: float = 0.99,
-    ):
-        """Initialization.
-
-        Args:
-            env (gym.Env): openAI Gym environment
-            memory_size (int): length of memory
-            batch_size (int): batch size for sampling
-            target_update (int): period for target model's hard update
-            epsilon_decay (float): step size to decrease epsilon
-            lr (float): learning rate
-            max_epsilon (float): max value of epsilon
-            min_epsilon (float): min value of epsilon
-            gamma (float): discount factor
-        """
-        obs_dim = env.observation_space.shape[0]
-        action_dim = env.action_space.n
-
-        self.env = env
-        self.memory = ReplayBuffer(obs_dim, memory_size, batch_size)
-        self.batch_size = batch_size
-        self.epsilon = max_epsilon
-        self.epsilon_decay = epsilon_decay
-        self.max_epsilon = max_epsilon
-        self.min_epsilon = min_epsilon
-        self.target_update = target_update
-        self.gamma = gamma
-        self.trainframe = 0
-
-        # device: cpu / gpu
-        self.device = torch.device(
-            "cuda" if torch.cuda.is_available() else "cpu"
-        )
-        print(self.device)
-
-        # networks: dqn, dqn_target
-        self.dqn = Network(obs_dim, action_dim).to(self.device)
-        self.dqn_target = Network(obs_dim, action_dim).to(self.device)
-        self.dqn_target.load_state_dict(self.dqn.state_dict())
-        self.dqn_target.eval()
-
-        # optimizer
-        self.optimizer = optim.Adam(self.dqn.parameters())
-
-        # transition to store in memory
-        self.transition = list()
-
-        # mode: train / test
-        self.is_test = False
-
-    def select_action(self, state: np.ndarray) -> np.ndarray:
-        """Select an action from the input state."""
-        # epsilon greedy policy
-        if self.epsilon > np.random.random():
-            selected_action = self.env.action_space.sample()
-        else:
-            selected_action = self.dqn(
-                torch.FloatTensor(state).to(self.device)
-            ).argmax()
-            selected_action = selected_action.detach().cpu().numpy()
-
-        if not self.is_test:
-            self.transition = [state, selected_action]
-
-        return selected_action
-
-    def step(self, action: np.ndarray) -> Tuple[np.ndarray, np.float64, bool]:
-        """Take an action and return the response of the env."""
-        next_state, reward, done, _ = self.env.step(action)
-
-        if not self.is_test:
-            self.transition += [reward, next_state, done]
-            self.memory.store(*self.transition)
-
-        return next_state, reward, done
-
-    def update_model(self) -> torch.Tensor:
-        """Update the model by gradient descent."""
-        samples = self.memory.sample_batch()
-
-        loss = self._compute_dqn_loss(samples)
-
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
-
-        return loss.item()
-
-    def train(self, num_frames: int, plotting_interval: int = 200):
-        """Train the agent."""
-        self.is_test = False
-        global seed, seed_record
-        global text
-        state = self.env.reset()
-        update_cnt = 0
-        epsilons = []
-        losses = []
-        scores = []
-        self.rewards = []
-        score = 0
-        text += str(seed) + ' '
-        for frame_idx in range(1, num_frames + 1):
-            action = self.select_action(state)
-            next_state, reward, done = self.step(action)
-            state = next_state
-            score += reward
-            self.rewards.append(reward)
-            self.trainframe += 1
-            #print(score, self.trainframe)
-
-            if done or not self.trainframe//self.target_update:  # or (self.env.deltax == 0 and self.env.deltay == 0 and action):
-                state = self.env.reset()
-                scores.append(score)
-                score = 0
-                action_list.append(text)
-                seed = random.randint(1, 999999)
-                text = str(seed) + ' '
-                seed_record += '\n'
-                random.seed(seed)
-                self.trainframe = 0
-            # if training is ready
-            if len(self.memory) >= self.batch_size:
-                loss = self.update_model()
-                losses.append(loss)
-                update_cnt += 1
-
-                # linearly decrease epsilon
-                self.epsilon = max(
-                    self.min_epsilon, self.epsilon - (
-                            self.max_epsilon - self.min_epsilon
-                    ) * self.epsilon_decay
-                )
-                epsilons.append(self.epsilon)
-
-                # if hard update is needed
-                if update_cnt % self.target_update == 0:
-                    self._target_hard_update()
-
-            # plotting
-            if frame_idx % plotting_interval == 0:
-                self._plot(frame_idx, scores, losses, epsilons)
-
-        self.env.close()
-
-    def test(self, video_folder: str) -> None:
-        """Test the agent."""
-        self.is_test = True
-
-        # for recording a video
-        naive_env = self.env
-        self.env = gym.wrappers.RecordVideo(self.env, video_folder=video_folder)
-
-        state = self.env.reset()
-        done = False
-        score = 0
-
-        while not done:
-            action = self.select_action(state)
-            next_state, reward, done = self.step(action)
-
-            state = next_state
-            score += reward
-
-        #print("score: ", score)
-        self.env.close()
-
-        # reset
-        self.env = naive_env
-
-    def _compute_dqn_loss(self, samples: Dict[str, np.ndarray]) -> torch.Tensor:
-        """Return dqn loss."""
-        device = self.device  # for shortening the following lines
-        state = torch.FloatTensor(samples["obs"]).to(device)
-        next_state = torch.FloatTensor(samples["next_obs"]).to(device)
-        action = torch.LongTensor(samples["acts"].reshape(-1, 1)).to(device)
-        reward = torch.FloatTensor(samples["rews"].reshape(-1, 1)).to(device)
-        done = torch.FloatTensor(samples["done"].reshape(-1, 1)).to(device)
-
-        # G_t   = r + gamma * v(s_{t+1})  if state != Terminal
-        #       = r                       otherwise
-        curr_q_value = self.dqn(state).gather(1, action)
-        next_q_value = self.dqn_target(
-            next_state
-        ).max(dim=1, keepdim=True)[0].detach()
-        mask = 1 - done
-        target = (reward + self.gamma * next_q_value * mask).to(self.device)
-
-        # calculate dqn loss
-        loss = F.smooth_l1_loss(curr_q_value, target)
-
-        return loss
-
-    def _target_hard_update(self):
-        """Hard update: target <- local."""
-        self.dqn_target.load_state_dict(self.dqn.state_dict())
-
-    def _plot(
-            self,
-            frame_idx: int,
-            scores: List[float],
-            losses: List[float],
-            epsilons: List[float],
-    ):
-        """Plot the training progresses."""
-        clear_output(True)
-        plt.figure(figsize=(100, 25))
-        plt.subplot(131)
-        plt.title('frame %s. score: %s' % (frame_idx, np.mean(scores[-10:])))
-        plt.plot(scores)
-        #plt.title('rewards')
-        #plt.plot(self.rewards)
-        plt.subplot(132)
-        plt.title('loss')
-        plt.plot(losses)
-        #plt.subplot(133)
-        #plt.title('epsilons')
-        #plt.plot(epsilons)
-        plt.show()
-
-
-
-
-seed = random.randint(1, 999999)
-env = CustomEnv()
-def seed_torch(seed):
-    torch.manual_seed(seed)
-    if torch.backends.cudnn.enabled:
-        torch.backends.cudnn.benchmark = False
-        torch.backends.cudnn.deterministic = True
-
-
-
-# parameters
-num_frames = 10000
-memory_size = 10000
-batch_size = 128
-target_update = 100
-epsilon_decay = 1/2000
-
-# train
-agent = DQNAgent(env, memory_size, batch_size, target_update, epsilon_decay)
-agent.train(num_frames, num_frames)#TODO parameter splited into 100 plotting segment
-
-file=open('record.txt','w')
-file.write('\n'.join(action_list)) #output side
-seed_file=open('seed.txt','w')
-seed_file.write(seed_record)

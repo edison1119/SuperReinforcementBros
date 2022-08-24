@@ -332,7 +332,7 @@ def generate_stage():
     brickgroup.empty()
     spikegroup.empty()
     l = 0
-    for x in range(random.randint(0, 30)):#TODO 5~30 => 1(not activate)
+    for x in range(random.randint(0, 20)):#TODO 5~30 => 1(not activate)
         a, b = random.randint(5, 26), random.randint(0, 3)
         i = 1
         d = 1
@@ -351,7 +351,7 @@ def generate_stage():
     for i in fill:
         brickgroup.add(Brick(int(i[:2]) * 38 + 19, 500 - int(i[2:]) * 39, brickpic))
     if spiking:
-        for x in range(random.randint(2, 5)): #TODO 2~10=>2~5
+        for x in range(random.randint(0, 2)): #TODO 2~10=>2~5
             a = random.randint(6, 24)
             i = 1
             d = 1
@@ -374,7 +374,7 @@ class CustomEnv(gym.Env):
         # self.action_space = gym.spaces.Box()
         pygame.init()
         self.player = Player()
-        self.action_space = spaces.Discrete(32)
+        self.action_space = spaces.Discrete(30)
         self.observation_space = spaces.Box(low=np.zeros((122,)), high=np.zeros((122,)), dtype=np.float64)
         self.deltax = 0
         self.deltay = 0
@@ -407,7 +407,7 @@ class CustomEnv(gym.Env):
         for spike in spikegroup:
             spike.update()
         if self.player.isalive:
-            self.player.update(action)
+            self.player.update(action+2)
         self.deltax = self.player.rect.x - formerx if not self.player.nextstage else self.player.rect.x+1+1040-formerx
         self.deltay = self.player.rect.y - formery
         self.isnotmoving=(self.player.rect.x == formerx and self.player.rect.y == formery)
@@ -429,17 +429,13 @@ class CustomEnv(gym.Env):
              np.concatenate((np.concatenate([np.array([spike.rect.x, spike.rect.y]) for spike in spikegroup]),
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
-                   (-10 if not self.player.isalive else -2 if self.isnotmoving else self.deltax), self.player.finish, {}
+                   (-10 if not self.player.isalive else -2 if self.isnotmoving else self.deltax)/1000, self.player.finish, {}
             #       ((-2 if self.isnotmoving else \
             #        ((20 if self.player.nextstage and self.player.isalive else 0)
             #        - (20 if not self.player.isalive else 0)))+self.expectreward)/100,\
             #       self.player.finish, {}
         #print(returner[1])
-        if self.isnotmoving:
-            self.move.append(False)
-        else:
-            self.move.append(True)
-            #print('a')
+
         return returner
 
     def render(self):
@@ -881,7 +877,7 @@ class DQNAgent:
             memory_size: int,
             batch_size: int,
             target_update: int,
-            gamma: float = 0.5,
+            gamma: float = 0.99,
             # PER parameters
             alpha: float = 0.2,
             beta: float = 0.6,
@@ -1055,6 +1051,7 @@ class DQNAgent:
         update_cnt = 0
         losses = []
         scores = []
+        move = []
         score = 0
         text += str(seed) + ' '
         for frame_idx in range(1, num_frames + 1):
@@ -1064,7 +1061,8 @@ class DQNAgent:
             state = next_state
             score += reward
             self.trainframe += 1
-            if frame_idx > 100 and not any(self.env.move[-100:]):
+            move.append(self.env.isnotmoving)
+            if self.trainframe > 1000 and not any(move[-1000:]):#TODO
                 #print(text)
                 print("not moving", frame_idx)
                 return 1
@@ -1083,6 +1081,7 @@ class DQNAgent:
                 seed_record+='\n'
                 random.seed(seed)
                 self.trainframe = 0
+                move = []
             # if training is ready
             if len(self.memory) >= self.batch_size:
                 loss = self.update_model()
@@ -1182,13 +1181,14 @@ class DQNAgent:
     ):
         """Plot the training progresses."""
         clear_output(True)
-        plt.figure(figsize=(20, 5))
-        plt.subplot(131)
+        plt.figure(figsize=(100, 100))
+        plt.rcParams.update({'font.size': 60})
+        plt.subplot(211)
         plt.title('frame %s. score: %s' % (frame_idx, np.mean(scores[-10:])))
-        plt.plot(scores)
-        plt.subplot(132)
+        plt.plot(scores, linewidth=5)
+        plt.subplot(212)
         plt.title('loss')
-        plt.plot(losses)
+        plt.plot(losses, linewidth=5)
         fig=plt.gcf()
         current_directory = os.getcwd()
         storage = os.path.join(current_directory, 'storage')
@@ -1197,8 +1197,6 @@ class DQNAgent:
         n.close()
         del n
         fig.savefig(f'storage/f{x}.png')
-        plt.show()
-        plt.close()
 
 
 
@@ -1213,10 +1211,10 @@ def seed_torch(seed):
 
 
 # parameters
-num_frames = 400000
+num_frames = 10000000
 memory_size = 10000
 batch_size = 128
-target_update = 1
+target_update = 10000
 
 # train
 def looptrain():

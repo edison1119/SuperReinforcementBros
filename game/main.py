@@ -1,5 +1,5 @@
 #!/bin/sh
-
+print()
 import pygame
 from pygame.locals import *
 from gym import spaces
@@ -316,8 +316,13 @@ def generate_stage():
     brickgroup.empty()
     spikegroup.empty()
     l = 0
+<<<<<<< Updated upstream
     for x in range(random.randint(5, 30)):#TODO 5~30 => 1(not activate)
         a, b = random.randint(0, 26), random.randint(0, 3)
+=======
+    for x in range(random.randint(0, 0)):#2, 10)):#TODO 5~30 => 1(not activate)
+        a, b = random.randint(5, 26), random.randint(0, 3)
+>>>>>>> Stashed changes
         i = 1
         d = 1
         while str(a).zfill(2) + str(b) in fill:
@@ -335,8 +340,13 @@ def generate_stage():
     for i in fill:
         brickgroup.add(Brick(int(i[:2]) * 38 + 19, 500 - int(i[2:]) * 39, brickpic))
     if spiking:
+<<<<<<< Updated upstream
         for x in range(random.randint(2, 10)):
             a = random.randint(2, 24)
+=======
+        for x in range(random.randint(0, 0)):#2, 5)): #TODO 2~10=>2~5
+            a = random.randint(6, 24)
+>>>>>>> Stashed changes
             i = 1
             d = 1
             while str(a).zfill(2) + "0" in fill:

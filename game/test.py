@@ -46,7 +46,7 @@ window_width, window_height = 1000, 600
 
 spikegroup = pygame.sprite.Group()
 brickgroup = pygame.sprite.Group()
-#screen = pygame.display.set_mode((1000, 600))
+screen = pygame.display.set_mode((1000, 600))
 
 action_list = []
 text = ''
@@ -282,7 +282,7 @@ class Player(pygame.sprite.Sprite):
         # print('yvel', self.yvel)
         self.rect.y = self.rect.y + self.yvel
         # blit
-        #screen.blit(self.image, (self.rect.x, self.rect.y))
+        screen.blit(self.image, (self.rect.x, self.rect.y))
         self.onplatform = False
         self.wall = False
         if self.xpos > 10200 or not self.isalive:
@@ -302,7 +302,7 @@ class Object(pygame.sprite.Sprite):
 
 
     def update(self):
-        #screen.blit(self.image, (self.rect.x, self.rect.y))
+        screen.blit(self.image, (self.rect.x, self.rect.y))
         pass
 
 
@@ -951,7 +951,7 @@ class DQNAgent:
         self.dqn_target = Network(
             obs_dim, action_dim, self.atom_size, self.support
         ).to(self.device)
-        self.dqn_target.load_state_dict(self.dqn.state_dict())
+        self.dqn_target.load_state_dict(torch.load('model20.pth'))
         self.dqn_target.eval()
 
         # optimizer
@@ -961,8 +961,8 @@ class DQNAgent:
         self.transition = list()
 
         # mode: train / test
-        self.is_test = False
-        self.first_train = True
+        self.is_test = True
+        self.first_train = False
         self.trainframe = 0
 
     def select_action(self, state: np.ndarray) -> np.ndarray:
@@ -1107,7 +1107,7 @@ class DQNAgent:
 
         frames = []
         while not done:
-            frames.append(self.env.render(mode="rgb_array"))
+            #frames.append(self.env.render(mode="rgb_array"))
             action = self.select_action(state)
             next_state, reward, done = self.step(action)
 
@@ -1116,7 +1116,7 @@ class DQNAgent:
 
         self.env.close()
 
-        return frames
+        #return frames
 
     def _compute_dqn_loss(self, samples: Dict[str, np.ndarray], gamma: float) -> torch.Tensor:
         """Return categorical dqn loss."""
@@ -1217,31 +1217,6 @@ batch_size = 128
 target_update = 10000
 
 # train
-def looptrain():
-    global action_list, seed_record, seed
-    seed = random.randint(1, 999999)
-    env = CustomEnv()
-    agent = DQNAgent(env, memory_size, batch_size, target_update)
-    if agent.train(num_frames, num_frames) == 1:#TODO parameter splited into 100 plotting segment
-        return 1
-    current_directory=os.getcwd()
-    storage= os.path.join(current_directory,'storage')
-    n = open(os.path.join(storage,'store.txt'),'r')
-    x=n.read()
-    n.close()
-    del n
-    n = open(os.path.join(storage,'store.txt'),'w')
-    n.write(str(int(x)+1))
-    n.close()
-    del n
-    file=open(os.path.join(storage,f'record{x}.txt'),'w+')
-    file.write('\n'.join(action_list)) #output side
-    seed_file=open(os.path.join(storage,f'seed{x}.txt'),'w+')
-    seed_file.write(' '.join(seed_record))
-    file.close()
-    seed_file.close()
-    action_list=[]
-    seed_record=[]
-    state = {"dqn": agent.dqn.state_dict(), "dqn_target": agent.dqn_target.state_dict()}
-    torch.save(state, f'storage/model{x}.pth')
-    return 0
+env = CustomEnv()
+agent = DQNAgent(env, memory_size, batch_size, target_update)
+agent.test()

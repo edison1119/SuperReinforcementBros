@@ -430,6 +430,7 @@ class CustomEnv(gym.Env):
                              np.empty((60 - len(spikegroup)*2,)))) if len(spikegroup) else np.empty((60,)))
             ), \
                    (-10 if not self.player.isalive else -2 if self.isnotmoving else self.deltax)/1000, self.player.finish, {}
+                    #TODO don't you think that moving forward for 10 pixel cancel out a death is a bit too unbalanced?
             #       ((-2 if self.isnotmoving else \
             #        ((20 if self.player.nextstage and self.player.isalive else 0)
             #        - (20 if not self.player.isalive else 0)))+self.expectreward)/100,\
